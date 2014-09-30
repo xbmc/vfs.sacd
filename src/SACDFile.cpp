@@ -42,6 +42,92 @@ extern "C" {
 #include "xbmc/IFileTypes.h"
 #include "xbmc/xbmc_vfs_dll.h"
 
+struct sacd_input_s
+{
+    void*              fd;
+    uint8_t            *input_buffer;
+    ssize_t            total_sectors;
+};
+
+
+int sacd_vfs_input_authenticate(sacd_input_t dev)
+{
+  return 0;
+}
+
+int sacd_vfs_input_decrypt(sacd_input_t dev, uint8_t *buffer, int blocks)
+{
+  return 0;
+}
+
+/**
+ * initialize and open a SACD device or file.
+ */
+sacd_input_t sacd_vfs_input_open(const char *target)
+{
+    sacd_input_t dev;
+
+    /* Allocate the library structure */
+    dev = (sacd_input_t) calloc(sizeof(*dev), 1);
+    if (dev == NULL)
+    {
+      fprintf(stderr, "libsacdread: Could not allocate memory.\n");
+      return NULL;
+    }
+
+    /* Open the device */
+    struct stat64 buffer;
+    XBMC->StatFile(target, &buffer);
+    dev->total_sectors = buffer.st_size/SACD_LSN_SIZE;
+    dev->fd = XBMC->OpenFile(target, 0);
+    if (!dev->fd < 0)
+    {
+      goto error;
+    }
+
+    return dev;
+
+error:
+
+    free(dev);
+
+    return 0;
+}
+
+/**
+ * return the last error message
+ */
+char *sacd_vfs_input_error(sacd_input_t dev)
+{
+    return (char *) "unknown error";
+}
+
+/**
+ * read data from the device.
+ */
+ssize_t sacd_vfs_input_read(sacd_input_t dev, int pos, int blocks, void *buffer)
+{
+  XBMC->SeekFile(dev->fd, pos*SACD_LSN_SIZE, SEEK_SET);
+  return XBMC->ReadFile(dev->fd, buffer, blocks*SACD_LSN_SIZE)/SACD_LSN_SIZE;
+}
+
+/**
+ * close the SACD device and clean up.
+ */
+int sacd_vfs_input_close(sacd_input_t dev)
+{
+  XBMC->CloseFile(dev->fd);
+  return 0;
+}
+
+uint32_t sacd_vfs_input_total_sectors(sacd_input_t dev)
+{
+  if (!dev)
+    return 0;
+
+  return dev->total_sectors;
+}
+
 //-- Create -------------------------------------------------------------------
 // Called on load. Addon should fully initalize or return error status
 //-----------------------------------------------------------------------------

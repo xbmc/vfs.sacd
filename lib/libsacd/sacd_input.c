@@ -60,11 +60,9 @@ uint32_t     (*sacd_input_total_sectors)(sacd_input_t);
 
 struct sacd_input_s
 {
-    int                 fd;
+    void*              fd;
     uint8_t            *input_buffer;
-#if defined(__lv2ppu__)
-    device_info_t       device_info;
-#endif
+    ssize_t            total_sectors;
 };
 
 static int sacd_dev_input_authenticate(sacd_input_t dev)
@@ -571,6 +569,14 @@ static ssize_t sacd_net_input_read(sacd_input_t dev, int pos, int blocks, void *
     return 0;
 }
 
+extern sacd_input_t sacd_vfs_input_open         (const char *);
+extern int          sacd_vfs_input_close        (sacd_input_t);
+extern ssize_t      sacd_vfs_input_read         (sacd_input_t, int, int, void *);
+extern char *       sacd_vfs_input_error        (sacd_input_t);
+extern int          sacd_vfs_input_authenticate (sacd_input_t);
+extern int          sacd_vfs_input_decrypt      (sacd_input_t, uint8_t *, int);
+extern uint32_t     sacd_vfs_input_total_sectors(sacd_input_t);
+
 /**
  * Setup read functions with either network or file access
  */
@@ -604,13 +610,20 @@ int sacd_input_setup(const char* path)
         return 1;
     } 
 
-    sacd_input_open = sacd_dev_input_open;
-    sacd_input_close = sacd_dev_input_close;
-    sacd_input_read = sacd_dev_input_read;
-    sacd_input_error = sacd_dev_input_error;
-    sacd_input_authenticate  = sacd_dev_input_authenticate;
-    sacd_input_decrypt = sacd_dev_input_decrypt;
-    sacd_input_total_sectors = sacd_dev_input_total_sectors;
+/*    sacd_input_open = sacd_dev_input_open;*/
+/*    sacd_input_close = sacd_dev_input_close;*/
+/*    sacd_input_read = sacd_dev_input_read;*/
+/*    sacd_input_error = sacd_dev_input_error;*/
+/*    sacd_input_authenticate  = sacd_dev_input_authenticate;*/
+/*    sacd_input_decrypt = sacd_dev_input_decrypt;*/
+/*    sacd_input_total_sectors = sacd_dev_input_total_sectors;*/
+    sacd_input_open = sacd_vfs_input_open;
+    sacd_input_close = sacd_vfs_input_close;
+    sacd_input_read = sacd_vfs_input_read;
+    sacd_input_error = sacd_vfs_input_error;
+    sacd_input_authenticate  = sacd_vfs_input_authenticate;
+    sacd_input_decrypt = sacd_vfs_input_decrypt;
+    sacd_input_total_sectors = sacd_vfs_input_total_sectors;
 
     return 0;
 } 
