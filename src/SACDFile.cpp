@@ -332,7 +332,7 @@ void* Open(VFSURL* url)
   return result;
 }
 
-unsigned int Read(void* context, void* lpBuf, int64_t uiBufSize)
+ssize_t Read(void* context, void* lpBuf, size_t uiBufSize)
 {
   SACDContext* ctx = (SACDContext*)context;
 
@@ -341,7 +341,7 @@ unsigned int Read(void* context, void* lpBuf, int64_t uiBufSize)
   handle->data = ctx->frame_buffer;
   if (handle && ctx->pos < handle->header_size)
   {
-    size_t tocopy = std::min(uiBufSize, (int64_t)handle->header_size-ctx->pos);
+    size_t tocopy = std::min(uiBufSize, (size_t)handle->header_size-ctx->pos);
     memcpy(lpBuf, handle->header+ctx->pos, tocopy);
     ctx->pos += tocopy;
     return tocopy;
@@ -425,7 +425,7 @@ unsigned int Read(void* context, void* lpBuf, int64_t uiBufSize)
       return 0;
   }
 
-  size_t tocopy = std::min(uiBufSize, (int64_t)ctx->decode_buffer.getMaxReadSize());
+  size_t tocopy = std::min(uiBufSize, (size_t)ctx->decode_buffer.getMaxReadSize());
   ctx->decode_buffer.ReadData((char*)lpBuf, tocopy);
   ctx->pos += tocopy;
   return tocopy;
@@ -535,7 +535,7 @@ int Truncate(void* context, int64_t size)
   return -1;
 }
 
-int Write(void* context, const void* lpBuf, int64_t uiBufSize)
+ssize_t Write(void* context, const void* lpBuf, size_t uiBufSize)
 {
   return -1;
 }
