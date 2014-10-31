@@ -17,10 +17,10 @@
  *
  */
 
-#include "xbmc/util/timeutils.h"
-#include "xbmc/threads/mutex.h"
-#include "xbmc/libXBMC_addon.h"
-#include "xbmc/IFileTypes.h"
+#include "kodi/util/timeutils.h"
+#include "kodi/threads/mutex.h"
+#include "kodi/libXBMC_addon.h"
+#include "kodi/IFileTypes.h"
 #include <map>
 #include <sstream>
 #include <fcntl.h>
@@ -39,8 +39,7 @@ extern "C" {
 #include "scarletbook_read.h"
 #include "scarletbook_output.h"
 #include "scarletbook_print.h"
-#include "xbmc/IFileTypes.h"
-#include "xbmc/xbmc_vfs_dll.h"
+#include "kodi/kodi_vfs_dll.h"
 
 struct sacd_input_s
 {
@@ -80,7 +79,7 @@ sacd_input_t sacd_vfs_input_open(const char *target)
     XBMC->StatFile(target, &buffer);
     dev->total_sectors = buffer.st_size/SACD_LSN_SIZE;
     dev->fd = XBMC->OpenFile(target, 0);
-    if (!dev->fd < 0)
+    if (dev->fd < 0)
     {
       goto error;
     }

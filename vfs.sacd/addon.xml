@@ -5,10 +5,10 @@
   name="SACD ISO support"
   provider-name="spiff">
   <requires>
-    <import addon="xbmc.vfs" version="1.0.0"/>
+    <import addon="kodi.vfs" version="1.0.0"/>
   </requires>
   <extension
-    point="xbmc.vfs"
+    point="kodi.vfs"
     protocols="sacd"
     extensions=".iso"
     files="true"

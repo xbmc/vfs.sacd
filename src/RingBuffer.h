@@ -19,7 +19,7 @@
  *
  */
 
-#include "xbmc/threads/mutex.h"
+#include "kodi/threads/mutex.h"
 
 class CRingBuffer
 {

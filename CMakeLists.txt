@@ -6,14 +6,14 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
 
 enable_language(CXX)
 
-find_package(xbmc REQUIRED)
-find_package(xbmcplatform REQUIRED)
+find_package(kodi REQUIRED)
+find_package(kodiplatform REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIR}/lib/libsacd
                     ${PROJECT_SOURCE_DIR}/lib/libsacd/common
                     ${PROJECT_SOURCE_DIR}/lib/libsacd/dstdec
-                    ${XBMC_INCLUDE_DIR}
-                    ${XBMCPLATFORM_INCLUDE_DIRS})
+                    ${KODI_INCLUDE_DIR}
+                    ${KODIPLATFORM_INCLUDE_DIRS})
 
 add_definitions(-D_LARGEFILE64_SOURCE
                 -D_FILE_OFFSET_BITS=64
