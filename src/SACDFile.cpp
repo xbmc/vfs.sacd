@@ -17,8 +17,8 @@
  *
  */
 
-#include "kodi/util/timeutils.h"
-#include "kodi/threads/mutex.h"
+#include "platform/util/timeutils.h"
+#include "platform/threads/mutex.h"
 #include "kodi/libXBMC_addon.h"
 #include "kodi/IFileTypes.h"
 #include <map>
