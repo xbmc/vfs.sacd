@@ -17,10 +17,10 @@
  *
  */
 
-#include "platform/util/timeutils.h"
-#include "platform/threads/mutex.h"
-#include "kodi/libXBMC_addon.h"
-#include "kodi/IFileTypes.h"
+#include "util/timeutils.h"
+#include "threads/mutex.h"
+#include "libXBMC_addon.h"
+#include "IFileTypes.h"
 #include <map>
 #include <sstream>
 #include <fcntl.h>
@@ -125,6 +125,70 @@ uint32_t sacd_vfs_input_total_sectors(sacd_input_t dev)
     return 0;
 
   return dev->total_sectors;
+}
+
+static std::string URLDecode(const std::string& strURLData)
+//modified to be more accomodating - if a non hex value follows a % take the characters directly and don't raise an error.
+// However % characters should really be escaped like any other non safe character (www.rfc-editor.org/rfc/rfc1738.txt)
+{
+  std::string strResult;
+
+  /* result will always be less than source */
+  strResult.reserve( strURLData.length() );
+
+  for (unsigned int i = 0; i < strURLData.size(); ++i)
+  {
+    int kar = (unsigned char)strURLData[i];
+    if (kar == '+') strResult += ' ';
+    else if (kar == '%')
+    {
+      if (i < strURLData.size() - 2)
+      {
+        std::string strTmp;
+        strTmp.assign(strURLData.substr(i + 1, 2));
+        int dec_num=-1;
+        sscanf(strTmp.c_str(), "%x", (unsigned int *)&dec_num);
+        if (dec_num<0 || dec_num>255)
+          strResult += kar;
+        else
+        {
+          strResult += (char)dec_num;
+          i += 2;
+        }
+      }
+      else
+        strResult += kar;
+    }
+    else strResult += kar;
+  }
+
+  return strResult;
+}
+
+static std::string URLEncode(const std::string& strURLData)
+{
+  std::string strResult;
+
+  /* wonder what a good value is here is, depends on how often it occurs */
+  strResult.reserve( strURLData.length() * 2 );
+
+  for (size_t i = 0; i < strURLData.size(); ++i)
+  {
+    const char kar = strURLData[i];
+
+    // Don't URL encode "-_.!()" according to RFC1738
+    //! @todo Update it to "-_.~" after Gotham according to RFC3986
+    if (std::isalnum(kar) || kar == '-' || kar == '.' || kar == '_' || kar == '!' || kar == '(' || kar == ')')
+      strResult.push_back(kar);
+    else
+    {
+      char temp[128];
+      sprintf(temp,"%%%2.2X", (unsigned int)((unsigned char)kar));
+      strResult += temp;
+    }
+  }
+
+  return strResult;
 }
 
 //-- Create -------------------------------------------------------------------
@@ -275,7 +339,7 @@ void* Open(VFSURL* url)
   std::string file(url->filename);
   int track = strtol(file.substr(0,file.size()-4).c_str(), 0, 10);
   SACDContext* result = new SACDContext;
-  result->reader = sacd_open(url->hostname);
+  result->reader = sacd_open(URLDecode(url->hostname).c_str());
   if (!result->reader)
   {
     delete result;
@@ -395,8 +459,8 @@ ssize_t Read(void* context, void* lpBuf, size_t uiBufSize)
       ctx->output->stats_total_sectors_processed += ctx->block_size;
       ctx->output->stats_current_file_sectors_processed += ctx->block_size;
 
-      // the ATAPI call which returns the flag if the disc is encrypted or not is unknown at this point. 
-      // user reports tell me that the only non-encrypted discs out there are DSD 3 14/16 discs. 
+      // the ATAPI call which returns the flag if the disc is encrypted or not is unknown at this point.
+      // user reports tell me that the only non-encrypted discs out there are DSD 3 14/16 discs.
       // this is a quick hack/fix for these discs.
       if (ctx->encrypted && ctx->checked_for_non_encrypted_disc == 0)
       {
@@ -410,12 +474,12 @@ ssize_t Read(void* context, void* lpBuf, size_t uiBufSize)
 
         ctx->checked_for_non_encrypted_disc = 1;
       }
-      
+
       // encrypted blocks need to be decrypted first
       if (ctx->encrypted && ctx->non_encrypted_disc == 0)
         sacd_decrypt((sacd_reader_t*)ctx->ft->sb_handle->sacd,
                      ctx->output->read_buffer, ctx->block_size);
-      
+
       scarletbook_process_frames(ctx->ft->sb_handle, ctx->output->read_buffer,
                                  ctx->block_size, ctx->ft->current_lsn == ctx->end_lsn,
                                  frame_read_callback, ctx);
@@ -550,22 +614,22 @@ bool Rename(VFSURL* url, VFSURL* url2)
 }
 
 void* OpenForWrite(VFSURL* url, bool bOverWrite)
-{ 
+{
   return NULL;
 }
 
 void* ContainsFiles(VFSURL* url, VFSDirEntry** items, int* num_items, char* rootpath)
 {
   sacd_reader_t* reader;
-  char* encoded;
+  std::string encoded;
   if (strlen(url->hostname))
   {
-    encoded = XBMC->URLEncode(url->hostname);
-    reader = sacd_open(url->hostname);
+    encoded = url->hostname;
+    reader = sacd_open(URLDecode(url->hostname).c_str());
   }
   else
   {
-    encoded = XBMC->URLEncode(url->url);
+    encoded = URLEncode(url->url);
     reader = sacd_open(url->url);
   }
   if (reader)
@@ -581,7 +645,7 @@ void* ContainsFiles(VFSURL* url, VFSDirEntry** items, int* num_items, char* root
         (*itms)[i].label = strdup(track_text->track_type_title);
         (*itms)[i].title = strdup(track_text->track_type_title);
         std::stringstream str;
-        str << "sacd://" << encoded << '/' << i+1 << ".dff";
+        str << "sacd://" << encoded << '/' << i+1 << ".dsf";
         (*itms)[i].path = strdup(str.str().c_str());
       }
       *items = &(*itms)[0];
@@ -595,7 +659,6 @@ void* ContainsFiles(VFSURL* url, VFSDirEntry** items, int* num_items, char* root
         strcpy(rootpath, str.str().c_str());
       }
 
-      XBMC->FreeString(encoded);
       return itms;
     }
   }

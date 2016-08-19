@@ -6,14 +6,16 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
 
 enable_language(CXX)
 
-find_package(kodi REQUIRED)
-find_package(kodiplatform REQUIRED)
+find_package(Kodi REQUIRED)
+find_package(p8-platform REQUIRED)
+find_package(Kodiplatform REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIR}/lib/libsacd
                     ${PROJECT_SOURCE_DIR}/lib/libsacd/common
                     ${PROJECT_SOURCE_DIR}/lib/libsacd/dstdec
                     ${KODI_INCLUDE_DIR}
-                    ${KODIPLATFORM_INCLUDE_DIRS})
+                    ${p8-platform_INCLUDE_DIRS}
+                    ${kodiplatform_INCLUDE_DIRS})
 
 add_definitions(-D_LARGEFILE64_SOURCE
                 -D_FILE_OFFSET_BITS=64
@@ -24,6 +26,6 @@ add_subdirectory(lib/libsacd)
 set(SACD_SOURCES src/RingBuffer.cpp
                  src/SACDFile.cpp)
 
-set(DEPLIBS sacd)
+set(DEPLIBS sacd ${p8-platform_LIBRARIES} ${kodiplatform_LIBRARIES})
 
 build_addon(vfs.sacd SACD DEPLIBS)

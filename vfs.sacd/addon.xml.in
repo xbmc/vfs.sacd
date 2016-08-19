@@ -14,10 +14,10 @@
     files="true"
     directories="true"
     filedirectories="true"
-    library_linux="vfs.sacd.so"/>
+    library_@PLATFORM@="@LIBRARY_FILENAME@" />
   <extension point="xbmc.addon.metadata">
     <summary lang="en">SACD ISO support</summary>
     <description lang="en">SACD ISO support</description>
-    <platform>all</platform>
+    <platform>@PLATFORM@</platform>
   </extension>
 </addon>

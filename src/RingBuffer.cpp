@@ -43,7 +43,7 @@ CRingBuffer::~CRingBuffer()
 /* Create a ring buffer with the specified 'size' */
 bool CRingBuffer::Create(unsigned int size)
 {
-  PLATFORM::CLockObject lock(m_critSection, true);
+  P8PLATFORM::CLockObject lock(m_critSection, true);
   m_buffer = (char*)malloc(size);
   if (m_buffer != NULL)
   {
@@ -56,7 +56,7 @@ bool CRingBuffer::Create(unsigned int size)
 /* Free the ring buffer and set all values to NULL or 0 */
 void CRingBuffer::Destroy()
 {
-  PLATFORM::CLockObject lock(m_critSection, true);
+  P8PLATFORM::CLockObject lock(m_critSection, true);
   if (m_buffer != NULL)
   {
     free(m_buffer);
@@ -71,7 +71,7 @@ void CRingBuffer::Destroy()
 /* Clear the ring buffer */
 void CRingBuffer::Clear()
 {
-  PLATFORM::CLockObject lock(m_critSection, true);
+  P8PLATFORM::CLockObject lock(m_critSection, true);
   m_readPtr = 0;
   m_writePtr = 0;
   m_fillCount = 0;
@@ -82,7 +82,7 @@ void CRingBuffer::Clear()
  */
 bool CRingBuffer::ReadData(char *buf, unsigned int size)
 {
-  PLATFORM::CLockObject lock(m_critSection, true);
+  P8PLATFORM::CLockObject lock(m_critSection, true);
   if (size > m_fillCount)
   {
     return false;
@@ -110,7 +110,7 @@ bool CRingBuffer::ReadData(char *buf, unsigned int size)
  */
 bool CRingBuffer::ReadData(CRingBuffer &rBuf, unsigned int size)
 {
-  PLATFORM::CLockObject lock(m_critSection, true);
+  P8PLATFORM::CLockObject lock(m_critSection, true);
   if (rBuf.getBuffer() == NULL)
     rBuf.Create(size);
 
@@ -133,7 +133,7 @@ bool CRingBuffer::ReadData(CRingBuffer &rBuf, unsigned int size)
  */
 bool CRingBuffer::WriteData(const char *buf, unsigned int size)
 {
-  PLATFORM::CLockObject lock(m_critSection, true);
+  P8PLATFORM::CLockObject lock(m_critSection, true);
   if (size > m_size - m_fillCount)
   {
     return false;
@@ -161,7 +161,7 @@ bool CRingBuffer::WriteData(const char *buf, unsigned int size)
  */
 bool CRingBuffer::WriteData(CRingBuffer &rBuf, unsigned int size)
 {
-  PLATFORM::CLockObject lock(m_critSection, true);
+  P8PLATFORM::CLockObject lock(m_critSection, true);
   if (m_buffer == NULL)
     Create(size);
 
@@ -181,7 +181,7 @@ bool CRingBuffer::WriteData(CRingBuffer &rBuf, unsigned int size)
 /* Skip bytes in buffer to be read */
 bool CRingBuffer::SkipBytes(int skipSize)
 {
-  PLATFORM::CLockObject lock(m_critSection, true);
+  P8PLATFORM::CLockObject lock(m_critSection, true);
   if (skipSize < 0)
   {
     return false; // skipping backwards is not supported
@@ -228,7 +228,7 @@ char *CRingBuffer::getBuffer()
 
 unsigned int CRingBuffer::getSize()
 {
-  PLATFORM::CLockObject lock(m_critSection, true);
+  P8PLATFORM::CLockObject lock(m_critSection, true);
   return m_size;
 }
 
@@ -239,18 +239,18 @@ unsigned int CRingBuffer::getReadPtr() const
 
 unsigned int CRingBuffer::getWritePtr()
 {
-  PLATFORM::CLockObject lock(m_critSection, true);
+  P8PLATFORM::CLockObject lock(m_critSection, true);
   return m_writePtr;
 }
 
 unsigned int CRingBuffer::getMaxReadSize()
 {
-  PLATFORM::CLockObject lock(m_critSection, true);
+  P8PLATFORM::CLockObject lock(m_critSection, true);
   return m_fillCount;
 }
 
 unsigned int CRingBuffer::getMaxWriteSize()
 {
-  PLATFORM::CLockObject lock(m_critSection, true);
+  P8PLATFORM::CLockObject lock(m_critSection, true);
   return m_size - m_fillCount;
 }

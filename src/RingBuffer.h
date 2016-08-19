@@ -19,11 +19,11 @@
  *
  */
 
-#include "platform/threads/mutex.h"
+#include "threads/mutex.h"
 
 class CRingBuffer
 {
-  PLATFORM::CMutex m_critSection;
+  P8PLATFORM::CMutex m_critSection;
   char *m_buffer;
   unsigned int m_size;
   unsigned int m_readPtr;
