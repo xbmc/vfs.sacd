@@ -26,6 +26,8 @@ add_subdirectory(lib/libsacd)
 set(SACD_SOURCES src/RingBuffer.cpp
                  src/SACDFile.cpp)
 
+set(SACD_HEADERS src/RingBuffer.h)
+
 set(DEPLIBS sacd ${p8-platform_LIBRARIES} ${kodiplatform_LIBRARIES})
 
 build_addon(vfs.sacd SACD DEPLIBS)
