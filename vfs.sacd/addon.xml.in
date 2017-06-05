@@ -4,9 +4,7 @@
   version="1.0.0"
   name="SACD ISO support"
   provider-name="spiff">
-  <requires>
-    <import addon="kodi.vfs" version="1.0.0"/>
-  </requires>
+  <requires>@ADDON_DEPENDS@</requires>
   <extension
     point="kodi.vfs"
     protocols="sacd"
