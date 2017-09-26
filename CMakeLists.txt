@@ -8,7 +8,7 @@ enable_language(CXX)
 
 find_package(Kodi REQUIRED)
 find_package(p8-platform REQUIRED)
-find_package(Kodiplatform REQUIRED)
+find_package(kodiplatform REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIR}/lib/libsacd
                     ${PROJECT_SOURCE_DIR}/lib/libsacd/common
