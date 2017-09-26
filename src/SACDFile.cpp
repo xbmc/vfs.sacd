@@ -17,10 +17,8 @@
  *
  */
 
-#include "util/timeutils.h"
-#include "threads/mutex.h"
-#include "libXBMC_addon.h"
-#include "IFileTypes.h"
+#include <kodi/Filesystem.h>
+#include <kodi/addon-instance/VFS.h>
 #include <map>
 #include <sstream>
 #include <fcntl.h>
@@ -28,9 +26,8 @@
 #include <vector>
 #include "RingBuffer.h"
 
-ADDON::CHelper_libXBMC_addon *XBMC           = NULL;
-
-extern "C" {
+extern "C"
+{
 
 #include "dsf.h"
 #include "logging.h"
@@ -39,7 +36,6 @@ extern "C" {
 #include "scarletbook_read.h"
 #include "scarletbook_output.h"
 #include "scarletbook_print.h"
-#include "kodi/kodi_vfs_dll.h"
 
 struct sacd_input_s
 {
@@ -75,11 +71,13 @@ sacd_input_t sacd_vfs_input_open(const char *target)
     }
 
     /* Open the device */
-    struct stat64 buffer;
-    XBMC->StatFile(target, &buffer);
-    dev->total_sectors = buffer.st_size/SACD_LSN_SIZE;
-    dev->fd = XBMC->OpenFile(target, 0);
-    if (dev->fd < 0)
+    STAT_STRUCTURE buffer;
+    kodi::vfs::StatFile(target, buffer);
+    dev->total_sectors = buffer.size/SACD_LSN_SIZE;
+    kodi::vfs::CFile* file = new kodi::vfs::CFile;
+    dev->fd = file;
+    bool result = file->OpenFile(target, 0);
+    if (!result)
     {
       goto error;
     }
@@ -88,6 +86,7 @@ sacd_input_t sacd_vfs_input_open(const char *target)
 
 error:
 
+    delete file;
     free(dev);
 
     return 0;
@@ -106,8 +105,9 @@ char *sacd_vfs_input_error(sacd_input_t dev)
  */
 ssize_t sacd_vfs_input_read(sacd_input_t dev, int pos, int blocks, void *buffer)
 {
-  XBMC->SeekFile(dev->fd, pos*SACD_LSN_SIZE, SEEK_SET);
-  return XBMC->ReadFile(dev->fd, buffer, blocks*SACD_LSN_SIZE)/SACD_LSN_SIZE;
+  kodi::vfs::CFile* file = static_cast<kodi::vfs::CFile*>(dev->fd);
+  file->Seek(pos*SACD_LSN_SIZE, SEEK_SET);
+  return file->Read(buffer, blocks*SACD_LSN_SIZE)/SACD_LSN_SIZE;
 }
 
 /**
@@ -115,7 +115,8 @@ ssize_t sacd_vfs_input_read(sacd_input_t dev, int pos, int blocks, void *buffer)
  */
 int sacd_vfs_input_close(sacd_input_t dev)
 {
-  XBMC->CloseFile(dev->fd);
+  kodi::vfs::CFile* file = static_cast<kodi::vfs::CFile*>(dev->fd);
+  delete file;
   return 0;
 }
 
@@ -191,60 +192,6 @@ static std::string URLEncode(const std::string& strURLData)
   return strResult;
 }
 
-//-- Create -------------------------------------------------------------------
-// Called on load. Addon should fully initalize or return error status
-//-----------------------------------------------------------------------------
-ADDON_STATUS ADDON_Create(void* hdl, void* props)
-{
-  if (!XBMC)
-    XBMC = new ADDON::CHelper_libXBMC_addon;
-
-  if (!XBMC->RegisterMe(hdl))
-  {
-    delete XBMC, XBMC=NULL;
-    return ADDON_STATUS_PERMANENT_FAILURE;
-  }
-
-  init_logging();
-
-  return ADDON_STATUS_OK;
-}
-
-//-- Stop ---------------------------------------------------------------------
-// This dll must cease all runtime activities
-// !!! Add-on master function !!!
-//-----------------------------------------------------------------------------
-void ADDON_Stop()
-{
-}
-
-//-- Destroy ------------------------------------------------------------------
-// Do everything before unload of this add-on
-// !!! Add-on master function !!!
-//-----------------------------------------------------------------------------
-void ADDON_Destroy()
-{
-  destroy_logging();
-}
-
-//-- GetStatus ---------------------------------------------------------------
-// Returns the current Status of this visualisation
-// !!! Add-on master function !!!
-//-----------------------------------------------------------------------------
-ADDON_STATUS ADDON_GetStatus()
-{
-  return ADDON_STATUS_OK;
-}
-
-//-- SetSetting ---------------------------------------------------------------
-// Set a specific Setting value (called from XBMC)
-// !!! Add-on master function !!!
-//-----------------------------------------------------------------------------
-ADDON_STATUS ADDON_SetSetting(const char *strSetting, const void* value)
-{
-  return ADDON_STATUS_OK;
-}
-
 struct SACDContext
 {
   sacd_reader_t* reader;
@@ -299,28 +246,50 @@ static void frame_error_callback(int frame_count, int frame_error_code,
   std::cout << "ERROR decoding DST frame" << std::endl;
 }
 
-void* Open(VFSURL* url)
+}
+
+class CSACDFile : public kodi::addon::CInstanceVFS
 {
-  std::string file(url->filename);
+public:
+  CSACDFile(KODI_HANDLE instance) : CInstanceVFS(instance) { }
+  virtual void* Open(const VFSURL& url) override;
+  virtual ssize_t Read(void* context, void* lpBuf, size_t uiBufSize) override;
+  virtual bool Close(void* context) override;
+  virtual int64_t GetLength(void* context) override;
+  virtual int64_t GetPosition(void* context) override;
+  virtual int Stat(const VFSURL& url, struct __stat64* buffer) override;
+  virtual int IoControl(void* context, XFILE::EIoControl request, void* param) override;
+  virtual bool ContainsFiles(const VFSURL& url, 
+                            std::vector<kodi::vfs::CDirEntry>& items,
+                            std::string& rootPath) override;
+  virtual bool GetDirectory(const VFSURL& url,
+                            std::vector<kodi::vfs::CDirEntry>& items,
+                            CVFSCallbacks callbacks) override
+  { std::string rpath; return ContainsFiles(url, items, rpath); }
+};
+
+void* CSACDFile::Open(const VFSURL& url)
+{
+  std::string file(url.filename);
   int track = strtol(file.substr(0,file.size()-4).c_str(), 0, 10);
   SACDContext* result = new SACDContext;
-  result->reader = sacd_open(URLDecode(url->hostname).c_str());
+  result->reader = sacd_open(URLDecode(url.hostname).c_str());
   if (!result->reader)
   {
     delete result;
-    return NULL;
+    return nullptr;
   }
   result->handle = scarletbook_open(result->reader, 0);
   if (!result->handle)
   {
     sacd_close(result->reader);
     delete result;
-    return NULL;
+    return nullptr;
   }
 
   result->output = scarletbook_output_create(result->handle, 0, 0, 0);
   scarletbook_output_enqueue_track(result->output, result->handle->twoch_area_idx,
-                                   track-1, (char*)url->url, (char*)"dsf", 1);
+                                   track-1, (char*)url.url, (char*)"dsf", 1);
 
   scarletbook_frame_init(result->handle);
 
@@ -360,7 +329,7 @@ void* Open(VFSURL* url)
   return result;
 }
 
-ssize_t Read(void* context, void* lpBuf, size_t uiBufSize)
+ssize_t CSACDFile::Read(void* context, void* lpBuf, size_t uiBufSize)
 {
   SACDContext* ctx = (SACDContext*)context;
 
@@ -459,7 +428,7 @@ ssize_t Read(void* context, void* lpBuf, size_t uiBufSize)
   return tocopy;
 }
 
-bool Close(void* context)
+bool CSACDFile::Close(void* context)
 {
   SACDContext* ctx = (SACDContext*)context;
   if (ctx->ft->dsd_encoded_export && ctx->ft->dst_encoded_import)
@@ -472,30 +441,20 @@ bool Close(void* context)
   return true;
 }
 
-int64_t GetLength(void* context)
+int64_t CSACDFile::GetLength(void* context)
 {
   SACDContext* ctx = (SACDContext*)context;
   dsf_handle_t* handle = (dsf_handle_t*)ctx->ft->priv;
   return (ctx->ft->start_lsn-ctx->end_lsn)*SACD_LSN_SIZE+handle->header_size;
 }
 
-int64_t GetPosition(void* context)
+int64_t CSACDFile::GetPosition(void* context)
 {
   SACDContext* ctx = (SACDContext*)context;
   return ctx->pos;
 }
 
-int64_t Seek(void* context, int64_t iFilePosition, int iWhence)
-{
-  return -1;
-}
-
-bool Exists(VFSURL* url)
-{
-  return false;
-}
-
-int Stat(VFSURL* url, struct __stat64* buffer)
+int CSACDFile::Stat(const VFSURL& url, struct __stat64* buffer)
 {
   memset(buffer, 0, sizeof(struct __stat64));
 
@@ -503,7 +462,7 @@ int Stat(VFSURL* url, struct __stat64* buffer)
   return -1;
 }
 
-int IoControl(void* context, XFILE::EIoControl request, void* param)
+int CSACDFile::IoControl(void* context, XFILE::EIoControl request, void* param)
 {
   if (request == XFILE::IOCTRL_SEEK_POSSIBLE)
     return 0;
@@ -511,91 +470,19 @@ int IoControl(void* context, XFILE::EIoControl request, void* param)
   return -1;
 }
 
-void ClearOutIdle()
-{
-}
-
-void DisconnectAll()
-{
-}
-
-bool DirectoryExists(VFSURL* url)
-{
-  return true;
-}
-
-void* GetDirectory(VFSURL* url, VFSDirEntry** items,
-                   int* num_items, VFSCallbacks* callbacks)
-{
-  return ContainsFiles(url, items, num_items, 0);
-}
-
-void FreeDirectory(void* items)
-{
-  std::vector<VFSDirEntry>& ctx = *(std::vector<VFSDirEntry>*)items;
-  for (size_t i=0;i<ctx.size();++i)
-  {
-    free(ctx[i].label);
-    free(ctx[i].title);
-    for (size_t j=0;j<ctx[i].num_props;++j)
-    {
-      free(ctx[i].properties[j].name);
-      free(ctx[i].properties[j].val);
-    }
-    delete ctx[i].properties;
-    free(ctx[i].path);
-  }
-  delete &ctx;
-}
-
-bool CreateDirectory(VFSURL* url)
-{
-  return false;
-}
-
-bool RemoveDirectory(VFSURL* url)
-{
-  return false;
-}
-
-int Truncate(void* context, int64_t size)
-{
-  return -1;
-}
-
-ssize_t Write(void* context, const void* lpBuf, size_t uiBufSize)
-{
-  return -1;
-}
-
-bool Delete(VFSURL* url)
-{
-  return false;
-}
-
-bool Rename(VFSURL* url, VFSURL* url2)
-{
-  return false;
-}
-
-void* OpenForWrite(VFSURL* url, bool bOverWrite)
-{
-  return NULL;
-}
-
-void* ContainsFiles(VFSURL* url, VFSDirEntry** items, int* num_items, char* rootpath)
+bool CSACDFile::ContainsFiles(const VFSURL& url, std::vector<kodi::vfs::CDirEntry>& items, std::string& rootPath)
 {
   sacd_reader_t* reader;
   std::string encoded;
-  if (strlen(url->hostname))
+  if (strlen(url.hostname))
   {
-    encoded = url->hostname;
-    reader = sacd_open(URLDecode(url->hostname).c_str());
+    encoded = url.hostname;
+    reader = sacd_open(URLDecode(url.hostname).c_str());
   }
   else
   {
-    encoded = URLEncode(url->url);
-    reader = sacd_open(url->url);
+    encoded = URLEncode(url.url);
+    reader = sacd_open(url.url);
   }
   if (reader)
   {
@@ -603,66 +490,45 @@ void* ContainsFiles(VFSURL* url, VFSDirEntry** items, int* num_items, char* root
     if (handle)
     {
       scarletbook_area_t* area = &handle->area[0];
-      std::vector<VFSDirEntry>* itms = new std::vector<VFSDirEntry>((int)area->area_toc->track_count);
+      kodi::vfs::CDirEntry item;
       for (size_t i=0;i<area->area_toc->track_count;++i)
       {
         area_track_text_t* track_text = &area->area_track_text[i];
-        (*itms)[i].label = strdup(track_text->track_type_title);
-        (*itms)[i].title = strdup(track_text->track_type_title);
+        item.SetLabel(track_text->track_type_title);
+        item.SetTitle(track_text->track_type_title);
         std::stringstream str;
         str << "sacd://" << encoded << '/' << i+1 << ".dsf";
-        (*itms)[i].path = strdup(str.str().c_str());
+        item.SetPath(str.str());
+        items.push_back(item);
       }
-      *items = &(*itms)[0];
-      *num_items = itms->size();
       scarletbook_close(handle);
       sacd_close(reader);
-      if (rootpath)
-      {
-        std::stringstream str;
-        str << "sacd://" << encoded << '/';
-        strcpy(rootpath, str.str().c_str());
-      }
 
-      return itms;
+      std::stringstream str;
+      str << "sacd://" << encoded << '/';
+      rootPath = str.str();
+
+      return !items.empty();
     }
   }
-  return NULL;
-}
-
-int GetStartTime(void* ctx)
-{
-  return 0;
-}
-
-int GetTotalTime(void* ctx)
-{
-  return 0;
-}
-
-bool NextChannel(void* context, bool preview)
-{
   return false;
 }
 
-bool PrevChannel(void* context, bool preview)
-{
-  return false;
-}
 
-bool SelectChannel(void* context, unsigned int uiChannel)
+class ATTRIBUTE_HIDDEN CMyAddon : public kodi::addon::CAddonBase
 {
-  return false;
-}
+public:
+  CMyAddon() { }
+  virtual ADDON_STATUS CreateInstance(int instanceType, std::string instanceID, KODI_HANDLE instance, KODI_HANDLE& addonInstance) override
+  {
+    init_logging();
+    addonInstance = new CSACDFile(instance);
+    return ADDON_STATUS_OK;
+  }
+  virtual ~CMyAddon()
+  {
+    destroy_logging();
+  }
+};
 
-bool UpdateItem(void* context)
-{
-  return false;
-}
-
-int GetChunkSize(void* context)
-{
-  return 0;
-}
-
-}
+ADDONCREATOR(CMyAddon);
