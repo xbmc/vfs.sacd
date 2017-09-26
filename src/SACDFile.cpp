@@ -19,15 +19,12 @@
 
 #include <kodi/Filesystem.h>
 #include <kodi/addon-instance/VFS.h>
-#include "libXBMC_addon.h"
 #include <map>
 #include <sstream>
 #include <fcntl.h>
 #include <iostream>
 #include <vector>
 #include "RingBuffer.h"
-
-ADDON::CHelper_libXBMC_addon *XBMC = nullptr;
 
 extern "C"
 {
@@ -77,8 +74,10 @@ sacd_input_t sacd_vfs_input_open(const char *target)
     STAT_STRUCTURE buffer;
     kodi::vfs::StatFile(target, buffer);
     dev->total_sectors = buffer.size/SACD_LSN_SIZE;
-    dev->fd = XBMC->OpenFile(target, 0);
-    if (dev->fd < 0)
+    kodi::vfs::CFile* file = new kodi::vfs::CFile;
+    dev->fd = file;
+    bool result = file->OpenFile(target, 0);
+    if (!result)
     {
       goto error;
     }
@@ -87,6 +86,7 @@ sacd_input_t sacd_vfs_input_open(const char *target)
 
 error:
 
+    delete file;
     free(dev);
 
     return 0;
@@ -105,9 +105,9 @@ char *sacd_vfs_input_error(sacd_input_t dev)
  */
 ssize_t sacd_vfs_input_read(sacd_input_t dev, int pos, int blocks, void *buffer)
 {
-
-  XBMC->SeekFile(dev->fd, pos*SACD_LSN_SIZE, SEEK_SET);
-  return XBMC->ReadFile(dev->fd, buffer, blocks*SACD_LSN_SIZE)/SACD_LSN_SIZE;
+  kodi::vfs::CFile* file = static_cast<kodi::vfs::CFile*>(dev->fd);
+  file->Seek(pos*SACD_LSN_SIZE, SEEK_SET);
+  return file->Read(buffer, blocks*SACD_LSN_SIZE)/SACD_LSN_SIZE;
 }
 
 /**
@@ -115,7 +115,8 @@ ssize_t sacd_vfs_input_read(sacd_input_t dev, int pos, int blocks, void *buffer)
  */
 int sacd_vfs_input_close(sacd_input_t dev)
 {
-  XBMC->CloseFile(dev->fd);
+  kodi::vfs::CFile* file = static_cast<kodi::vfs::CFile*>(dev->fd);
+  delete file;
   return 0;
 }
 
@@ -258,7 +259,13 @@ public:
   virtual int64_t GetPosition(void* context) override;
   virtual int Stat(const VFSURL& url, struct __stat64* buffer) override;
   virtual int IoControl(void* context, XFILE::EIoControl request, void* param) override;
-  virtual bool ContainsFiles(const VFSURL& url, std::vector<kodi::vfs::CDirEntry>& items, std::string& rootPath) override;
+  virtual bool ContainsFiles(const VFSURL& url, 
+                            std::vector<kodi::vfs::CDirEntry>& items,
+                            std::string& rootPath) override;
+  virtual bool GetDirectory(const VFSURL& url,
+                            std::vector<kodi::vfs::CDirEntry>& items,
+                            CVFSCallbacks callbacks) override
+  { std::string rpath; return ContainsFiles(url, items, rpath); }
 };
 
 void* CSACDFile::Open(const VFSURL& url)
@@ -514,8 +521,13 @@ public:
   CMyAddon() { }
   virtual ADDON_STATUS CreateInstance(int instanceType, std::string instanceID, KODI_HANDLE instance, KODI_HANDLE& addonInstance) override
   {
+    init_logging();
     addonInstance = new CSACDFile(instance);
     return ADDON_STATUS_OK;
+  }
+  virtual ~CMyAddon()
+  {
+    destroy_logging();
   }
 };
 
