@@ -13,7 +13,7 @@ find_package(kodiplatform REQUIRED)
 include_directories(${PROJECT_SOURCE_DIR}/lib/libsacd
                     ${PROJECT_SOURCE_DIR}/lib/libsacd/common
                     ${PROJECT_SOURCE_DIR}/lib/libsacd/dstdec
-                    ${KODI_INCLUDE_DIR}
+                    ${KODI_INCLUDE_DIR}/..
                     ${p8-platform_INCLUDE_DIRS}
                     ${kodiplatform_INCLUDE_DIRS})
 

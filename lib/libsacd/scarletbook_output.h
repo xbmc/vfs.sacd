@@ -31,6 +31,10 @@
 #include "scarletbook.h"
 #include <sys/atomic.h>
 
+#if !defined(__lv2ppu__)
+#include <pthread.h>
+#endif
+
 // forward declaration
 typedef struct scarletbook_output_format_t scarletbook_output_format_t;
 
