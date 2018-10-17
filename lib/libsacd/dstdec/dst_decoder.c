@@ -75,6 +75,8 @@ static unsigned processor_count(void)
 {
 #if defined(_WIN32)
     return pthread_num_processors_np();
+#elif defined(__ANDROID__)
+    return 1;
 #elif defined(__linux__)
     return get_nprocs();
 #elif defined(__APPLE__) || defined(__FreeBSD__)
