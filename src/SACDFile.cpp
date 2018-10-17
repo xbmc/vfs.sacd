@@ -34,6 +34,7 @@ extern "C"
 #include "logging.h"
 #include "sacd_reader.h"
 #include "scarletbook.h"
+#include "scarletbook_id3.h"
 #include "scarletbook_read.h"
 #include "scarletbook_output.h"
 #include "scarletbook_print.h"
@@ -262,6 +263,8 @@ public:
                     std::vector<kodi::vfs::CDirEntry>& items,
                     CVFSCallbacks callbacks) override
   { std::string rpath; return ContainsFiles(url, items, rpath); }
+
+  std::vector<uint8_t> id3_buffer;
 };
 
 void* CSACDFile::Open(const VFSURL& url)
@@ -292,6 +295,11 @@ void* CSACDFile::Open(const VFSURL& url)
   result->frame_buffer = new uint8_t[128*1024];
   result->decode_buffer.Create(1024*1024*10);
 
+  id3_buffer.resize(128*1024);
+  int len = scarletbook_id3_tag_render(result->handle, id3_buffer.data(),
+                                       0, track-1);
+  id3_buffer.resize(len);
+
   struct list_head* node_ptr = result->output->ripping_queue.next;
   result->ft = list_entry(node_ptr,scarletbook_output_format_t,siblings);
   result->ft->priv = calloc(1, result->ft->handler.priv_size);
@@ -302,7 +310,7 @@ void* CSACDFile::Open(const VFSURL& url)
   result->end_lsn = result->ft->start_lsn + result->ft->length_lsn;
 
   dsf_handle_t* handle = (dsf_handle_t*)result->ft->priv;
-  handle->header_size = (result->ft->start_lsn-result->end_lsn)*SACD_LSN_SIZE; // store approximate length here for header injection
+  handle->header_size = (result->end_lsn-result->ft->start_lsn)*SACD_LSN_SIZE; // store approximate length here for header injection
   (*result->ft->handler.startwrite)(result->ft);
 
   // set the encryption range
@@ -327,10 +335,20 @@ ssize_t CSACDFile::Read(void* context, void* lpBuf, size_t uiBufSize)
   // prepend header
   dsf_handle_t* handle = (dsf_handle_t*)ctx->ft->priv;
   handle->data = ctx->frame_buffer;
-  if (handle && ctx->pos < handle->header_size)
+
+  if (handle && ctx->pos < id3_buffer.size())
   {
-    size_t tocopy = std::min(uiBufSize, static_cast<size_t>(handle->header_size-ctx->pos));
-    memcpy(lpBuf, handle->header+ctx->pos, tocopy);
+    size_t tocopy = std::min(uiBufSize, static_cast<size_t>(id3_buffer.size()-ctx->pos));
+    memcpy(lpBuf, id3_buffer.data()+ctx->pos, tocopy);
+    ctx->pos += tocopy;
+    return tocopy;
+  }
+
+  int header_pos = ctx->pos-id3_buffer.size();
+  if (handle && header_pos < handle->header_size)
+  {
+    size_t tocopy = std::min(uiBufSize, static_cast<size_t>(handle->header_size-header_pos));
+    memcpy(lpBuf, handle->header+header_pos, tocopy);
     ctx->pos += tocopy;
     return tocopy;
   }
@@ -434,7 +452,7 @@ int64_t CSACDFile::GetLength(void* context)
 {
   SACDContext* ctx = (SACDContext*)context;
   dsf_handle_t* handle = (dsf_handle_t*)ctx->ft->priv;
-  return (ctx->ft->start_lsn-ctx->end_lsn)*SACD_LSN_SIZE+handle->header_size;
+  return (ctx->end_lsn-ctx->ft->start_lsn)*SACD_LSN_SIZE+handle->header_size+id3_buffer.size();
 }
 
 int64_t CSACDFile::GetPosition(void* context)
