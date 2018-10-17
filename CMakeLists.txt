@@ -31,3 +31,5 @@ set(SACD_HEADERS src/RingBuffer.h)
 set(DEPLIBS sacd ${p8-platform_LIBRARIES} ${kodiplatform_LIBRARIES})
 
 build_addon(vfs.sacd SACD DEPLIBS)
+
+include(CPack)
