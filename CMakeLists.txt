@@ -9,6 +9,7 @@ enable_language(CXX)
 find_package(Kodi REQUIRED)
 find_package(p8-platform REQUIRED)
 find_package(kodiplatform REQUIRED)
+find_package(Threads REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIR}/lib/libsacd
                     ${PROJECT_SOURCE_DIR}/lib/libsacd/common
@@ -28,7 +29,8 @@ set(SACD_SOURCES src/RingBuffer.cpp
 
 set(SACD_HEADERS src/RingBuffer.h)
 
-set(DEPLIBS sacd ${p8-platform_LIBRARIES} ${kodiplatform_LIBRARIES})
+set(DEPLIBS sacd ${p8-platform_LIBRARIES} ${kodiplatform_LIBRARIES}
+                 ${CMAKE_INIT_THREAD_LIBS})
 
 build_addon(vfs.sacd SACD DEPLIBS)
 
