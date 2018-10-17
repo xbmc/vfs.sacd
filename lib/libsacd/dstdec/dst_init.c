@@ -80,8 +80,7 @@ Changes:
 static void *MemoryAllocate(int NrOfElements, int SizeOfElement) 
 {
   void *Array;
-
-  if ((Array = _mm_malloc(NrOfElements * SizeOfElement, 16)) == NULL) 
+  if (posix_memalign(&Array, 16, NrOfElements * SizeOfElement) != 0)
   {
     fprintf(stderr,"ERROR: not enough memory available!\n\n");
   }
@@ -90,7 +89,7 @@ static void *MemoryAllocate(int NrOfElements, int SizeOfElement)
 
 static void MemoryFree(void *Array) 
 {
-  _mm_free(Array);
+  free(Array);
 }
 
 /* General function for allocating memory for array of any type */
