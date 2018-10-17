@@ -12,6 +12,7 @@
     files="true"
     directories="true"
     filedirectories="true"
+    encodedhostname="true"
     library_@PLATFORM@="@LIBRARY_FILENAME@" />
   <extension point="xbmc.addon.metadata">
     <summary lang="en">SACD ISO support</summary>
