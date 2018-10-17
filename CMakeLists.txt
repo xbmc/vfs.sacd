@@ -10,13 +10,15 @@ find_package(Kodi REQUIRED)
 find_package(p8-platform REQUIRED)
 find_package(kodiplatform REQUIRED)
 find_package(Threads REQUIRED)
+find_package(Iconv REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIR}/lib/libsacd
                     ${PROJECT_SOURCE_DIR}/lib/libsacd/common
                     ${PROJECT_SOURCE_DIR}/lib/libsacd/dstdec
                     ${KODI_INCLUDE_DIR}/..
                     ${p8-platform_INCLUDE_DIRS}
-                    ${kodiplatform_INCLUDE_DIRS})
+                    ${kodiplatform_INCLUDE_DIRS}
+                    ${iconv_INCLUDE_DIRS})
 
 add_definitions(-D_LARGEFILE64_SOURCE
                 -D_FILE_OFFSET_BITS=64
@@ -30,7 +32,7 @@ set(SACD_SOURCES src/RingBuffer.cpp
 set(SACD_HEADERS src/RingBuffer.h)
 
 set(DEPLIBS sacd ${p8-platform_LIBRARIES} ${kodiplatform_LIBRARIES}
-                 ${CMAKE_INIT_THREAD_LIBS})
+                 ${CMAKE_INIT_THREAD_LIBS} ${ICONV_LIBRARY})
 
 build_addon(vfs.sacd SACD DEPLIBS)
 
