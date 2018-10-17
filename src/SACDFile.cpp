@@ -483,8 +483,8 @@ bool CSACDFile::ContainsFiles(const VFSURL& url, std::vector<kodi::vfs::CDirEntr
   std::string encoded;
   if (strlen(url.hostname))
   {
-    encoded = url.hostname;
-    reader = sacd_open(URLDecode(url.hostname).c_str());
+    encoded = URLEncode(url.hostname);
+    reader = sacd_open(url.hostname);
   }
   else
   {
