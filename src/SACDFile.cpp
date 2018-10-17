@@ -65,10 +65,10 @@ sacd_input_t sacd_vfs_input_open(const char *target)
 
     /* Allocate the library structure */
     dev = (sacd_input_t) calloc(sizeof(*dev), 1);
-    if (dev == NULL)
+    if (dev == nullptr)
     {
       fprintf(stderr, "libsacdread: Could not allocate memory.\n");
-      return NULL;
+      return nullptr;
     }
 
     /* Open the device */
@@ -211,7 +211,7 @@ struct SACDContext
   uint8_t* frame_buffer;
   CRingBuffer decode_buffer;
   int64_t pos;
-  SACDContext() : reader(NULL), handle(NULL), output(NULL), encrypted_start_1(0),
+  SACDContext() : reader(nullptr), handle(nullptr), output(nullptr), encrypted_start_1(0),
                   encrypted_start_2(0), encrypted_end_1(0), encrypted_end_2(0),
                   checked_for_non_encrypted_disc(0), non_encrypted_disc(0), pos(0)
   {
@@ -248,19 +248,19 @@ class CSACDFile : public kodi::addon::CInstanceVFS
 {
 public:
   CSACDFile(KODI_HANDLE instance) : CInstanceVFS(instance) { }
-  virtual void* Open(const VFSURL& url) override;
-  virtual ssize_t Read(void* context, void* lpBuf, size_t uiBufSize) override;
-  virtual bool Close(void* context) override;
-  virtual int64_t GetLength(void* context) override;
-  virtual int64_t GetPosition(void* context) override;
-  virtual int Stat(const VFSURL& url, struct __stat64* buffer) override;
-  virtual int IoControl(void* context, XFILE::EIoControl request, void* param) override;
-  virtual bool ContainsFiles(const VFSURL& url, 
-                            std::vector<kodi::vfs::CDirEntry>& items,
-                            std::string& rootPath) override;
-  virtual bool GetDirectory(const VFSURL& url,
-                            std::vector<kodi::vfs::CDirEntry>& items,
-                            CVFSCallbacks callbacks) override
+  void* Open(const VFSURL& url) override;
+  ssize_t Read(void* context, void* lpBuf, size_t uiBufSize) override;
+  bool Close(void* context) override;
+  int64_t GetLength(void* context) override;
+  int64_t GetPosition(void* context) override;
+  int Stat(const VFSURL& url, struct __stat64* buffer) override;
+  int IoControl(void* context, XFILE::EIoControl request, void* param) override;
+  bool ContainsFiles(const VFSURL& url,
+                     std::vector<kodi::vfs::CDirEntry>& items,
+                     std::string& rootPath) override;
+  bool GetDirectory(const VFSURL& url,
+                    std::vector<kodi::vfs::CDirEntry>& items,
+                    CVFSCallbacks callbacks) override
   { std::string rpath; return ContainsFiles(url, items, rpath); }
 };
 
