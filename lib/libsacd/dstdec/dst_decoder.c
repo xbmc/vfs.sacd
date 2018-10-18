@@ -56,6 +56,7 @@
 #ifdef __linux__
 #include <sys/sysinfo.h>
 #endif
+#include <unistd.h>
 
 #include <logging.h>
 
