@@ -358,9 +358,9 @@ int join_all(void)
    operation, a sleep or pause, or a condition wait */
 void destruct(thread *off_course)
 {
-    int ret;
+/*    int ret;
 
     if ((ret = pthread_cancel(off_course->id)) != 0)
-        fail(ret);
+        fail(ret);*/
     join(off_course);
 }
