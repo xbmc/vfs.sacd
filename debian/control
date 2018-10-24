@@ -1,0 +1,21 @@
+Source: kodi-vfs-sacd
+Priority: extra
+Maintainer: wsnipex <wsnipex@a1.net>
+Build-Depends: debhelper (>= 9.0.0), cmake, kodi-addon-dev, libp8-platform-dev, libkodiplatform-dev
+Standards-Version: 3.9.8
+Section: libs
+
+Package: kodi-vfs-sacd
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: sacd VFS for Kodi
+ sacd VFS for Kodi
+
+Package: kodi-vfs-sacd-dbg
+Section: debug
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: debug symbols for sacd VFS for Kodi
+ debug symbols for sacd VFS for Kodi
+
