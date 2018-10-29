@@ -398,6 +398,9 @@ ssize_t CSACDFile::Read(void* context, void* lpBuf, size_t uiBufSize)
                                                        ctx->ft->current_lsn,
                                                        ctx->block_size,
                                                        ctx->output->read_buffer);
+      if (ctx->block_size == 0)
+        return -1;
+
       ctx->ft->current_lsn += ctx->block_size;
       ctx->output->stats_total_sectors_processed += ctx->block_size;
       ctx->output->stats_current_file_sectors_processed += ctx->block_size;
