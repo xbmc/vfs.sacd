@@ -7,9 +7,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${CMAKE_CURRENT_SOURCE_DIR}/id3
                     ${CMAKE_CURRENT_SOURCE_DIR}/dstdec)
 
-# Extra flags for GCC
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-
 set(SOURCES cuesheet.c
             dsdiff.c
             dsf.c
@@ -56,3 +53,4 @@ set(SOURCES cuesheet.c
             dstdec/yarn.c)
 
 add_library(sacd STATIC ${SOURCES})
+set_property(TARGET sacd PROPERTY POSITION_INDEPENDENT_CODE ON)
