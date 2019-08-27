@@ -398,6 +398,9 @@ ssize_t CSACDFile::Read(void* context, void* lpBuf, size_t uiBufSize)
                                                        ctx->ft->current_lsn,
                                                        ctx->block_size,
                                                        ctx->output->read_buffer);
+      if (ctx->block_size == 0)
+        return -1;
+
       ctx->ft->current_lsn += ctx->block_size;
       ctx->output->stats_total_sectors_processed += ctx->block_size;
       ctx->output->stats_current_file_sectors_processed += ctx->block_size;
@@ -481,7 +484,7 @@ bool CSACDFile::ContainsFiles(const VFSURL& url, std::vector<kodi::vfs::CDirEntr
 {
   sacd_reader_t* reader;
   std::string encoded;
-  if (strlen(url.hostname))
+  if (strncmp(url.url, "sacd://",7) == 0 && strlen(url.hostname))
   {
     encoded = URLEncode(url.hostname);
     reader = sacd_open(url.hostname);
