@@ -1,7 +1,7 @@
 /**
- * SACD Ripper - http://code.google.com/write_ptr/sacd-ripper/
+ * SACD Ripper - https://github.com/sacd-ripper/
  *
- * Copyright (c) 2010-2011 by respective authors.
+ * Copyright (c) 2010-2015 by respective authors.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -155,7 +155,23 @@ static int dsf_create(scarletbook_output_format_t *ft)
 static int dsf_close(scarletbook_output_format_t *ft)
 {
     dsf_handle_t *handle = (dsf_handle_t *) ft->priv;
+    int i;
 
+    // write out what was left in the ring buffers
+    for (i = 0; i < handle->channel_count; i++)
+    {
+	if (handle->buffer_ptr[i] > handle->buffer[i]) {
+	    handle->sample_count += handle->buffer_ptr[i] - handle->buffer[i];
+
+	    fwrite(handle->buffer[i], 1, SACD_BLOCK_SIZE_PER_CHANNEL, ft->fd);
+	    memset(handle->buffer[i], 0, SACD_BLOCK_SIZE_PER_CHANNEL);
+
+	    handle->buffer_ptr[i] = handle->buffer[i];
+	    handle->audio_data_size += SACD_BLOCK_SIZE_PER_CHANNEL;
+	}
+    }
+
+    // write the footer
     fwrite(handle->footer, 1, handle->footer_size, ft->fd);
     fseek(ft->fd, 0, SEEK_SET);
     
@@ -195,19 +211,17 @@ static size_t dsf_write_frame(scarletbook_output_format_t *ft, const uint8_t *bu
 
                 handle->buffer_ptr[i]++;
                 buf_ptr++;
+            } else {
+              handle->sample_count += handle->buffer_ptr[i] - handle->buffer[i];
 
-                continue;
-            }
-
-            handle->sample_count += handle->buffer_ptr[i] - handle->buffer[i];
-
-            memcpy(handle->data+datapos, handle->buffer[i], SACD_BLOCK_SIZE_PER_CHANNEL);
-            datapos += SACD_BLOCK_SIZE_PER_CHANNEL;
+              memcpy(handle->data+datapos, handle->buffer[i], SACD_BLOCK_SIZE_PER_CHANNEL);
+              datapos += SACD_BLOCK_SIZE_PER_CHANNEL;
 /*            fwrite(handle->buffer[i], 1, SACD_BLOCK_SIZE_PER_CHANNEL, ft->fd);*/
-            memset(handle->buffer[i], 0, SACD_BLOCK_SIZE_PER_CHANNEL);
-            handle->buffer_ptr[i] = handle->buffer[i];
+              memset(handle->buffer[i], 0, SACD_BLOCK_SIZE_PER_CHANNEL);
 
-            handle->audio_data_size += SACD_BLOCK_SIZE_PER_CHANNEL;
+              handle->buffer_ptr[i] = handle->buffer[i];
+              handle->audio_data_size += SACD_BLOCK_SIZE_PER_CHANNEL;
+          }
         }
     }
 
