@@ -20,11 +20,11 @@
 
 #pragma once
 
-#include "threads/mutex.h"
+#include "Helpers.h"
 
 class CRingBuffer
 {
-  P8PLATFORM::CMutex m_critSection;
+  ThreadHelpers::CMutex m_critSection;
   char *m_buffer;
   unsigned int m_size;
   unsigned int m_readPtr;
