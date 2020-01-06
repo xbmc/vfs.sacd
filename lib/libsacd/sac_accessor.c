@@ -1,7 +1,7 @@
 /**
- * SACD Ripper - http://code.google.com/p/sacd-ripper/
+ * SACD Ripper - https://github.com/sacd-ripper/
  *
- * Copyright (c) 2010-2011 by respective authors.
+ * Copyright (c) 2010-2015 by respective authors.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -242,6 +242,9 @@ int destroy_sac_accessor(void)
         if (ret & 0x1)
         {
             sysSpuRawWriteProblemStorage(sa->id, SPU_In_MBox, EXIT_SAC_CMD);
+            EIEIO;
+
+            sysSpuRawWriteProblemStorage(sa->id, SPU_In_MBox, 0);
             EIEIO;
         }
     }
