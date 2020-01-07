@@ -43,9 +43,9 @@ extern "C"
 
 struct sacd_input_s
 {
-    void*              fd;
-    uint8_t            *input_buffer;
-    ssize_t            total_sectors;
+  void* fd;
+  uint8_t* input_buffer;
+  ssize_t total_sectors;
 };
 
 
@@ -64,36 +64,36 @@ int sacd_vfs_input_decrypt(sacd_input_t dev, uint8_t *buffer, int blocks)
  */
 sacd_input_t sacd_vfs_input_open(const char *target)
 {
-    sacd_input_t dev;
+  sacd_input_t dev;
 
-    /* Allocate the library structure */
-    dev = (sacd_input_t) calloc(sizeof(*dev), 1);
-    if (dev == nullptr)
-    {
-      fprintf(stderr, "libsacdread: Could not allocate memory.\n");
-      return nullptr;
-    }
+  /* Allocate the library structure */
+  dev = static_cast<sacd_input_t>(calloc(sizeof(*dev), 1));
+  if (dev == nullptr)
+  {
+    kodiLog(ADDON_LOG_ERROR, "%s: Could not allocate memory", __func__);
+    return nullptr;
+  }
 
-    /* Open the device */
-    STAT_STRUCTURE buffer;
-    kodi::vfs::StatFile(target, buffer);
-    dev->total_sectors = buffer.size/SACD_LSN_SIZE;
-    kodi::vfs::CFile* file = new kodi::vfs::CFile;
-    dev->fd = file;
-    bool result = file->OpenFile(target, 0);
-    if (!result)
-    {
-      goto error;
-    }
+  /* Open the device */
+  STAT_STRUCTURE buffer;
+  kodi::vfs::StatFile(target, buffer);
+  dev->total_sectors = buffer.size/SACD_LSN_SIZE;
+  kodi::vfs::CFile* file = new kodi::vfs::CFile;
+  dev->fd = file;
+  bool result = file->OpenFile(target, 0);
+  if (!result)
+  {
+    goto error;
+  }
 
-    return dev;
+  return dev;
 
 error:
 
-    delete file;
-    free(dev);
+  delete file;
+  free(dev);
 
-    return 0;
+  return 0;
 }
 
 /**
@@ -101,7 +101,7 @@ error:
  */
 char *sacd_vfs_input_error(sacd_input_t dev)
 {
-    return (char *) "unknown error";
+  return const_cast<char*>("unknown error");
 }
 
 /**
@@ -121,6 +121,9 @@ int sacd_vfs_input_close(sacd_input_t dev)
 {
   kodi::vfs::CFile* file = static_cast<kodi::vfs::CFile*>(dev->fd);
   delete file;
+
+  free(dev);
+
   return 0;
 }
 
@@ -152,7 +155,7 @@ static std::string URLDecode(const std::string& strURLData)
         std::string strTmp;
         strTmp.assign(strURLData.substr(i + 1, 2));
         int dec_num=-1;
-        sscanf(strTmp.c_str(), "%x", (unsigned int *)&dec_num);
+        sscanf(strTmp.c_str(), "%x", reinterpret_cast<unsigned int*>(&dec_num));
         if (dec_num<0 || dec_num>255)
           strResult += kar;
         else
@@ -198,51 +201,48 @@ static std::string URLEncode(const std::string& strURLData)
 
 struct SACDContext
 {
-  sacd_reader_t* reader;
-  scarletbook_handle_t* handle;
-  scarletbook_output_t* output;
-  scarletbook_output_format_t* ft;
-  uint32_t block_size;
-  uint32_t end_lsn;
-  uint32_t encrypted_start_1;
-  uint32_t encrypted_start_2;
-  uint32_t encrypted_end_1;
-  uint32_t encrypted_end_2;
-  uint32_t checked_for_non_encrypted_disc;
-  uint32_t non_encrypted_disc;
-  int encrypted;
-  uint8_t* frame_buffer;
+  sacd_reader_t* reader = nullptr;
+  scarletbook_handle_t* handle = nullptr;
+  scarletbook_output_t* output = nullptr;
+  scarletbook_output_format_t* ft = nullptr;
+  uint32_t block_size = 0;
+  uint32_t end_lsn = 0;
+  uint32_t encrypted_start_1 = 0;
+  uint32_t encrypted_start_2 = 0;
+  uint32_t encrypted_end_1 = 0;
+  uint32_t encrypted_end_2 = 0;
+  uint32_t checked_for_non_encrypted_disc = 0;
+  uint32_t non_encrypted_disc = 0;
+  int encrypted = 0;
+  uint8_t* frame_buffer = nullptr;
   CRingBuffer decode_buffer;
-  int64_t pos;
-  SACDContext() : reader(nullptr), handle(nullptr), output(nullptr), encrypted_start_1(0),
-                  encrypted_start_2(0), encrypted_end_1(0), encrypted_end_2(0),
-                  checked_for_non_encrypted_disc(0), non_encrypted_disc(0), pos(0)
-  {
-  }
+  int64_t pos = 0;
 };
 
 static void frame_read_callback(scarletbook_handle_t* handle, uint8_t* frame_data,
                                 size_t frame_size, void* userdata)
 {
-  SACDContext* ctx = (SACDContext*)userdata;
+  SACDContext* ctx = static_cast<SACDContext*>(userdata);
+
   size_t actual = (*ctx->ft->handler.write)(ctx->ft, frame_data, frame_size);
-  ctx->decode_buffer.WriteData((char*)ctx->frame_buffer, actual);
+  ctx->decode_buffer.WriteData(reinterpret_cast<char*>(ctx->frame_buffer), actual);
   ctx->ft->write_length += actual;
 }
 
 static void frame_decoded_callback(uint8_t* frame_data, size_t frame_size, void* userdata)
 {
-  SACDContext* ctx = (SACDContext*)userdata;
-  dsf_handle_t* handle = (dsf_handle_t*)ctx->ft->priv;
+  SACDContext* ctx = static_cast<SACDContext*>(userdata);
+  dsf_handle_t* handle = static_cast<dsf_handle_t*>(ctx->ft->priv);
+
   size_t actual = (*ctx->ft->handler.write)(ctx->ft, frame_data, frame_size);
-  ctx->decode_buffer.WriteData((char*)ctx->frame_buffer, actual);
+  ctx->decode_buffer.WriteData(reinterpret_cast<char*>(ctx->frame_buffer), actual);
   ctx->ft->write_length += actual;
 }
 
 static void frame_error_callback(int frame_count, int frame_error_code,
                                  const char *frame_error_message, void *userdata)
 {
-  std::cout << "ERROR decoding DST frame" << std::endl;
+  kodiLog(ADDON_LOG_ERROR, "%s: ERROR decoding DST frame", __func__);
 }
 
 }
@@ -290,7 +290,8 @@ void* CSACDFile::Open(const VFSURL& url)
 
   result->output = scarletbook_output_create(result->handle, 0, 0, 0);
   scarletbook_output_enqueue_track(result->output, result->handle->twoch_area_idx,
-                                   track-1, (char*)url.url, (char*)"dsf", 0);
+                                   track-1, const_cast<char*>(url.url),
+                                   const_cast<char*>("dsf"), 0);
 
   scarletbook_frame_init(result->handle);
 
@@ -303,7 +304,7 @@ void* CSACDFile::Open(const VFSURL& url)
   id3_buffer.resize(len);
 
   struct list_head* node_ptr = result->output->ripping_queue.next;
-  result->ft = list_entry(node_ptr,scarletbook_output_format_t,siblings);
+  result->ft = list_entry(node_ptr, scarletbook_output_format_t, siblings);
   result->ft->priv = calloc(1, result->ft->handler.priv_size);
   result->ft->fd = 0;
 
@@ -311,8 +312,8 @@ void* CSACDFile::Open(const VFSURL& url)
   result->ft->current_lsn = result->ft->start_lsn;
   result->end_lsn = result->ft->start_lsn + result->ft->length_lsn;
 
-  dsf_handle_t* handle = (dsf_handle_t*)result->ft->priv;
-  handle->header_size = (result->end_lsn-result->ft->start_lsn)*SACD_LSN_SIZE; // store approximate length here for header injection
+  dsf_handle_t* handle = static_cast<dsf_handle_t*>(result->ft->priv);
+  handle->header_size = (result->end_lsn-result->ft->start_lsn) * SACD_LSN_SIZE; // store approximate length here for header injection
   (*result->ft->handler.startwrite)(result->ft);
 
   // set the encryption range
@@ -332,10 +333,10 @@ void* CSACDFile::Open(const VFSURL& url)
 
 ssize_t CSACDFile::Read(void* context, void* lpBuf, size_t uiBufSize)
 {
-  SACDContext* ctx = (SACDContext*)context;
+  SACDContext* ctx = static_cast<SACDContext*>(context);
 
   // prepend header
-  dsf_handle_t* handle = (dsf_handle_t*)ctx->ft->priv;
+  dsf_handle_t* handle = static_cast<dsf_handle_t*>(ctx->ft->priv);
   handle->data = ctx->frame_buffer;
 
   if (handle && ctx->pos < id3_buffer.size())
@@ -396,7 +397,7 @@ ssize_t CSACDFile::Read(void* context, void* lpBuf, size_t uiBufSize)
       ctx->block_size = std::min(ctx->end_lsn - ctx->ft->current_lsn, ctx->block_size);
 
       // read some blocks
-      ctx->block_size = (uint32_t) sacd_read_block_raw((sacd_reader_t*)ctx->ft->sb_handle->sacd,
+      ctx->block_size = (uint32_t) sacd_read_block_raw(static_cast<sacd_reader_t*>(ctx->ft->sb_handle->sacd),
                                                        ctx->ft->current_lsn,
                                                        ctx->block_size,
                                                        ctx->output->read_buffer);
@@ -425,7 +426,7 @@ ssize_t CSACDFile::Read(void* context, void* lpBuf, size_t uiBufSize)
 
       // encrypted blocks need to be decrypted first
       if (ctx->encrypted && ctx->non_encrypted_disc == 0)
-        sacd_decrypt((sacd_reader_t*)ctx->ft->sb_handle->sacd,
+        sacd_decrypt(static_cast<sacd_reader_t*>(ctx->ft->sb_handle->sacd),
                      ctx->output->read_buffer, ctx->block_size);
 
       scarletbook_process_frames(ctx->ft->sb_handle, ctx->output->read_buffer,
@@ -437,14 +438,14 @@ ssize_t CSACDFile::Read(void* context, void* lpBuf, size_t uiBufSize)
   }
 
   size_t tocopy = std::min(uiBufSize, (size_t)ctx->decode_buffer.getMaxReadSize());
-  ctx->decode_buffer.ReadData((char*)lpBuf, tocopy);
+  ctx->decode_buffer.ReadData(static_cast<char*>(lpBuf), tocopy);
   ctx->pos += tocopy;
   return tocopy;
 }
 
 bool CSACDFile::Close(void* context)
 {
-  SACDContext* ctx = (SACDContext*)context;
+  SACDContext* ctx = static_cast<SACDContext*>(context);
   free(ctx->output->read_buffer);
   free(ctx->output);
   scarletbook_close(ctx->handle);
@@ -455,14 +456,14 @@ bool CSACDFile::Close(void* context)
 
 int64_t CSACDFile::GetLength(void* context)
 {
-  SACDContext* ctx = (SACDContext*)context;
-  dsf_handle_t* handle = (dsf_handle_t*)ctx->ft->priv;
-  return (ctx->end_lsn-ctx->ft->start_lsn)*SACD_LSN_SIZE+handle->header_size+id3_buffer.size();
+  SACDContext* ctx = static_cast<SACDContext*>(context);
+  dsf_handle_t* handle = static_cast<dsf_handle_t*>(ctx->ft->priv);
+  return (ctx->end_lsn - ctx->ft->start_lsn) * SACD_LSN_SIZE + handle->header_size + id3_buffer.size();
 }
 
 int64_t CSACDFile::GetPosition(void* context)
 {
-  SACDContext* ctx = (SACDContext*)context;
+  SACDContext* ctx = static_cast<SACDContext*>(context);
   return ctx->pos;
 }
 

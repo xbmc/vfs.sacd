@@ -24,15 +24,10 @@
 
 class CRingBuffer
 {
-  ThreadHelpers::CMutex m_critSection;
-  char *m_buffer;
-  unsigned int m_size;
-  unsigned int m_readPtr;
-  unsigned int m_writePtr;
-  unsigned int m_fillCount;
 public:
-  CRingBuffer();
+  CRingBuffer() = default;
   ~CRingBuffer();
+
   bool Create(unsigned int size);
   void Destroy();
   void Clear();
@@ -49,4 +44,13 @@ public:
   unsigned int getWritePtr();
   unsigned int getMaxReadSize();
   unsigned int getMaxWriteSize();
+
+private:
+  ThreadHelpers::CMutex m_critSection;
+
+  char *m_buffer = nullptr;
+  unsigned int m_size = 0;
+  unsigned int m_readPtr = 0;
+  unsigned int m_writePtr = 0;
+  unsigned int m_fillCount = 0;
 };
