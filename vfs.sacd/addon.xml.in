@@ -23,5 +23,8 @@ Super Audio CD (SACD) is a read-only optical disc format for audio storage, intr
 The SACD format offers more audio channels (e.g. surround sound), a higher bit rate, and longer playing time than a conventional CD.</description>
     <disclaimer lang="en_GB">Playback seek is currently not possible.</disclaimer>
     <platform>@PLATFORM@</platform>
+    <assets>
+      <icon>icon.png</icon>
+    </assets>
   </extension>
 </addon>
