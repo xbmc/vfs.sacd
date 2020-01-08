@@ -15,8 +15,13 @@
     encodedhostname="true"
     library_@PLATFORM@="@LIBRARY_FILENAME@" />
   <extension point="xbmc.addon.metadata">
-    <summary lang="en">SACD ISO support</summary>
-    <description lang="en">SACD ISO support</description>
+    <summary lang="en_GB">Super Audio CD ISO image</summary>
+<description lang="en_GB">This addon allows Kodi to read content from a Super Audio CD ISO image.
+
+Super Audio CD (SACD) is a read-only optical disc format for audio storage, introduced in 1999, developed jointly by Sony and Philips Electronics to be the successor to the Compact Disc.
+
+The SACD format offers more audio channels (e.g. surround sound), a higher bit rate, and longer playing time than a conventional CD.</description>
+    <disclaimer lang="en_GB">Playback seek is currently not possible.</disclaimer>
     <platform>@PLATFORM@</platform>
   </extension>
 </addon>
