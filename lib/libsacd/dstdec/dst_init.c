@@ -80,7 +80,12 @@ Changes:
 static void *MemoryAllocate(int NrOfElements, int SizeOfElement) 
 {
   void *Array;
+#ifdef _WIN32
+  Array = _aligned_malloc(NrOfElements * SizeOfElement, 16);
+  if (Array)
+#else
   if (posix_memalign(&Array, 16, NrOfElements * SizeOfElement) != 0)
+#endif
   {
     fprintf(stderr,"ERROR: not enough memory available!\n\n");
   }

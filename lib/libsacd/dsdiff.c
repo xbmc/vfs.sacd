@@ -24,7 +24,9 @@
 #include <inttypes.h>
 #include <string.h>
 #include <fcntl.h>
+#if !defined(_WIN32)
 #include <unistd.h>
+#endif
 #include <time.h>
 
 #ifdef __lv2ppu__

@@ -4,8 +4,11 @@ project(vfs.sacd)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
 
 find_package(Kodi REQUIRED)
-find_package(Threads REQUIRED)
 find_package(Iconv REQUIRED)
+find_package(Threads REQUIRED)
+if(WIN32)
+  find_package(PThreads4W REQUIRED)
+endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/lib/libsacd
                     ${PROJECT_SOURCE_DIR}/lib/libsacd/common
@@ -25,7 +28,12 @@ set(SACD_SOURCES src/RingBuffer.cpp
 set(SACD_HEADERS src/RingBuffer.h
                  src/Helpers.h)
 
-set(DEPLIBS sacd ${CMAKE_INIT_THREAD_LIBS} ${ICONV_LIBRARY})
+if(NOT WIN32)
+  set(DEPLIBS sacd ${CMAKE_THREAD_LIBS_INIT} ${ICONV_LIBRARY})
+else()
+  set(DEPLIBS sacd ${CMAKE_THREAD_LIBS_INIT} ${PTHREADS4W_LIBRARIES} ${ICONV_LIBRARY} ws2_32)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4996")
+endif()
 
 build_addon(vfs.sacd SACD DEPLIBS)
 

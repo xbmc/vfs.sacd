@@ -22,7 +22,7 @@
 #ifndef SACDREAD_INTERNAL_H
 #define SACDREAD_INTERNAL_H
 
-#ifdef _MSC_VER
+#ifndef _WIN32
 #include <unistd.h>
 #endif /* _MSC_VER */
 
