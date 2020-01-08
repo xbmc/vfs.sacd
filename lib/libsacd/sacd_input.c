@@ -22,7 +22,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#if !defined(_WIN32)
 #include <unistd.h>
+#endif
 #include <string.h>
 #include <sys/stat.h>
 

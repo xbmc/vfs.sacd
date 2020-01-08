@@ -22,6 +22,7 @@
 #include <kodi/Filesystem.h>
 #include <kodi/addon-instance/VFS.h>
 #include <algorithm>
+#include <cctype>
 #include <map>
 #include <sstream>
 #include <fcntl.h>

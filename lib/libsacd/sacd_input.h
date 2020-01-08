@@ -46,6 +46,10 @@
 #include <sys/io_buffer.h>
 #endif
 
+#if defined(_WIN32)
+  typedef intptr_t ssize_t;
+#endif
+
 typedef struct sacd_input_s * sacd_input_t;
 
 extern sacd_input_t (*sacd_input_open)         (const char *);

@@ -21,7 +21,9 @@
 
 #include <stdio.h>
 #include <fcntl.h>
+#if !defined(_WIN32)
 #include <unistd.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>

@@ -26,7 +26,9 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#if !defined(_WIN32)
 #include <unistd.h>
+#endif
 #include <limits.h>
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__bsdi__) || defined(__DARWIN__)
@@ -43,6 +45,30 @@
 
 #include "sacd_input.h"
 #include "sacd_reader.h"
+
+#ifdef _WIN32
+
+#ifndef S_IFBLK
+#define	S_IFBLK		0060000		/* [XSI] block special */
+#endif
+
+#ifndef S_ISBLK
+#define	S_ISBLK(m)	(((m) & S_IFMT) == S_IFBLK)	/* block special */
+#endif
+
+#ifndef S_ISCHR
+#define	S_ISCHR(m)	(((m) & S_IFMT) == S_IFCHR)	/* char special */
+#endif
+
+#ifndef S_ISDIR
+#define	S_ISDIR(m)	(((m) & S_IFMT) == S_IFDIR)	/* directory */
+#endif
+
+#ifndef S_ISREG
+#define	S_ISREG(m)	(((m) & S_IFMT) == S_IFREG)	/* regular file */
+#endif
+
+#endif
 
 struct sacd_reader_s
 {
