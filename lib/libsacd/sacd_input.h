@@ -1,7 +1,7 @@
 /**
- * SACD Ripper - http://code.google.com/p/sacd-ripper/
+ * SACD Ripper - https://github.com/sacd-ripper/
  *
- * Copyright (c) 2010-2011 by respective authors.
+ * Copyright (c) 2010-2015 by respective authors.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,10 @@
 
 #if defined(__lv2ppu__)
 #include <sys/io_buffer.h>
+#endif
+
+#if defined(_WIN32)
+  typedef intptr_t ssize_t;
 #endif
 
 typedef struct sacd_input_s * sacd_input_t;

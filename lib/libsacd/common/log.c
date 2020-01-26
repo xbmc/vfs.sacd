@@ -39,7 +39,9 @@
 #include <string.h>
 #include <stdarg.h>
 #include <time.h>
+#if !defined(_WIN32)
 #include <unistd.h>
+#endif
 #include <sys/stat.h> 
 
 #ifdef __lv2ppu__
