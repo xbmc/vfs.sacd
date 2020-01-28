@@ -1,7 +1,7 @@
 /**
- * SACD Ripper - http://code.google.com/p/sacd-ripper/
+ * SACD Ripper - https://github.com/sacd-ripper/
  *
- * Copyright (c) 2010-2011 by respective authors.
+ * Copyright (c) 2010-2015 by respective authors.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 #ifndef SACDREAD_INTERNAL_H
 #define SACDREAD_INTERNAL_H
 
-#ifdef _MSC_VER
+#ifndef _WIN32
 #include <unistd.h>
 #endif /* _MSC_VER */
 

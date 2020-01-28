@@ -54,3 +54,11 @@ set(SOURCES cuesheet.c
 
 add_library(sacd STATIC ${SOURCES})
 set_property(TARGET sacd PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+if(WIN32)
+  target_compile_definitions(sacd PRIVATE -Dstrncasecmp=_strnicmp
+                                          -Dstrcasecmp=_stricmp
+                                          -D_WINSOCK_DEPRECATED_NO_WARNINGS
+                                          -D_CRT_SECURE_NO_WARNINGS)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /wd4996")
+endif()

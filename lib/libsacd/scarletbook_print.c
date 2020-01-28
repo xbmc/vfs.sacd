@@ -1,7 +1,7 @@
 /**
- * SACD Ripper - http://code.google.com/p/sacd-ripper/
+ * SACD Ripper - https://github.com/sacd-ripper/
  *
- * Copyright (c) 2010-2011 by respective authors.
+ * Copyright (c) 2010-2015 by respective authors.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#if !defined(_WIN32)
 #include <unistd.h>
+#endif
 #include <inttypes.h>
 #include <string.h>
 #include <ctype.h>

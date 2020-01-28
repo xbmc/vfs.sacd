@@ -1,7 +1,7 @@
 /**
- * SACD Ripper - http://code.google.com/write_ptr/sacd-ripper/
+ * SACD Ripper - https://github.com/sacd-ripper/
  *
- * Copyright (c) 2010-2011 by respective authors.
+ * Copyright (c) 2010-2015 by respective authors.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h> 
+#if !defined(_WIN32)
+#include <unistd.h>
+#endif
 #include <stdint.h>
 #include <ctype.h>
 #include <wchar.h>
@@ -30,6 +32,24 @@
 #include "utils.h"
 #include "charset.h"
 #include "logging.h"
+
+#ifdef _WIN32
+#include <Windows.h>
+
+void usleep(__int64 usec)
+{
+    HANDLE timer;
+    LARGE_INTEGER ft;
+
+    ft.QuadPart = -(10*usec); // Convert to 100 nanosecond interval, negative value indicates relative time
+
+    timer = CreateWaitableTimer(NULL, TRUE, NULL);
+    SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+    WaitForSingleObject(timer, INFINITE);
+    CloseHandle(timer);
+}
+
+#endif
 
 char *substr(const char *pstr, int start, int numchars)
 {

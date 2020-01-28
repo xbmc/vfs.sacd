@@ -25,7 +25,9 @@
 #ifndef _LINUX_LIST_H
 #define _LINUX_LIST_H
 
+#if !defined(_WIN32)
 #include <unistd.h>
+#endif
 #include <stddef.h>
 
 #if !defined(offsetof)

@@ -31,7 +31,9 @@
 /* error codes */
 #include <errno.h>
 /* close function */
+#if !defined(_WIN32)
 #include <unistd.h>
+#endif
 /* fnctnl function and associated constants */
 #include <fcntl.h>
 /* struct sockaddr */
