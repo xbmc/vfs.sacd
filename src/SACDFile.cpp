@@ -1,6 +1,6 @@
 /*
  *      Copyright (C) 2014 Arne Morten Kvarving
- *      Copyright (C) 2014-2019 Team Kodi
+ *      Copyright (C) 2014-2020 Team Kodi
  *      http://kodi.tv
  *
  *  This Program is free software; you can redistribute it and/or modify
