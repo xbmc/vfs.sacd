@@ -258,7 +258,7 @@ public:
   int64_t GetLength(void* context) override;
   int64_t GetPosition(void* context) override;
   int Stat(const VFSURL& url, struct __stat64* buffer) override;
-  int IoControl(void* context, XFILE::EIoControl request, void* param) override;
+  int IoControl(void* context, VFS_IOCTRL request, void* param) override;
   bool ContainsFiles(const VFSURL& url,
                      std::vector<kodi::vfs::CDirEntry>& items,
                      std::string& rootPath) override;
@@ -476,9 +476,9 @@ int CSACDFile::Stat(const VFSURL& url, struct __stat64* buffer)
   return -1;
 }
 
-int CSACDFile::IoControl(void* context, XFILE::EIoControl request, void* param)
+int CSACDFile::IoControl(void* context, VFS_IOCTRL request, void* param)
 {
-  if (request == XFILE::IOCTRL_SEEK_POSSIBLE)
+  if (request == VFS_IOCTRL_SEEK_POSSIBLE)
     return 0;
 
   return -1;
