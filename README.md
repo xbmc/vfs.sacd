@@ -2,8 +2,10 @@
 
 This is a [Kodi](https://kodi.tv) VFS addon for SACD isos.
 
+[![License: GPL-2.0-or-later](https://img.shields.io/badge/License-GPL%20v2+-blue.svg)](LICENSE.md)
 [![Build Status](https://travis-ci.org/xbmc/vfs.sacd.svg?branch=Matrix)](https://travis-ci.org/xbmc/vfs.sacd/branches)
 [![Build Status](https://dev.azure.com/teamkodi/binary-addons/_apis/build/status/xbmc.vfs.sacd?branchName=Matrix)](https://dev.azure.com/teamkodi/binary-addons/_build/latest?definitionId=53&branchName=Matrix)
+[![Build Status](https://jenkins.kodi.tv/view/Addons/job/xbmc/job/vfs.sacd/job/Matrix/badge/icon)](https://jenkins.kodi.tv/blue/organizations/jenkins/xbmc%2Fvfs.sacd/branches/)
 <!--- [![Build Status](https://ci.appveyor.com/api/projects/status/github/xbmc/vfs.sacd?branch=Matrix&svg=true)](https://ci.appveyor.com/project/xbmc/vfs-sacd?branch=Matrix) -->
 
 ## Build instructions

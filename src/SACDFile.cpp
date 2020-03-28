@@ -1,22 +1,10 @@
 /*
- *      Copyright (C) 2014 Arne Morten Kvarving
- *      Copyright (C) 2014-2020 Team Kodi
- *      http://kodi.tv
+ *  Copyright (C) 2014 Arne Morten Kvarving
+ *  Copyright (C) 2014-2020 Team Kodi
+ *  https://kodi.tv
  *
- *  This Program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2, or (at your option)
- *  any later version.
- *
- *  This Program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with Kodi; see the file COPYING.  If not, see
- *  <http://www.gnu.org/licenses/>.
- *
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *  See LICENSE.md for more information.
  */
 
 #include <kodi/Filesystem.h>
@@ -258,7 +246,7 @@ public:
   int64_t GetLength(void* context) override;
   int64_t GetPosition(void* context) override;
   int Stat(const VFSURL& url, struct __stat64* buffer) override;
-  int IoControl(void* context, XFILE::EIoControl request, void* param) override;
+  int IoControl(void* context, VFS_IOCTRL request, void* param) override;
   bool ContainsFiles(const VFSURL& url,
                      std::vector<kodi::vfs::CDirEntry>& items,
                      std::string& rootPath) override;
@@ -476,9 +464,9 @@ int CSACDFile::Stat(const VFSURL& url, struct __stat64* buffer)
   return -1;
 }
 
-int CSACDFile::IoControl(void* context, XFILE::EIoControl request, void* param)
+int CSACDFile::IoControl(void* context, VFS_IOCTRL request, void* param)
 {
-  if (request == XFILE::IOCTRL_SEEK_POSSIBLE)
+  if (request == VFS_IOCTRL_SEEK_POSSIBLE)
     return 0;
 
   return -1;
