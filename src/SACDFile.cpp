@@ -64,9 +64,9 @@ sacd_input_t sacd_vfs_input_open(const char *target)
   }
 
   /* Open the device */
-  STAT_STRUCTURE buffer;
-  kodi::vfs::StatFile(target, buffer);
-  dev->total_sectors = buffer.size/SACD_LSN_SIZE;
+  kodi::vfs::FileStatus status;
+  kodi::vfs::StatFile(target, status);
+  dev->total_sectors = status.GetSize() / SACD_LSN_SIZE;
   kodi::vfs::CFile* file = new kodi::vfs::CFile;
   dev->fd = file;
   bool result = file->OpenFile(target, 0);
@@ -239,7 +239,7 @@ static void frame_error_callback(int frame_count, int frame_error_code,
 class CSACDFile : public kodi::addon::CInstanceVFS
 {
 public:
-  CSACDFile(KODI_HANDLE instance) : CInstanceVFS(instance) { }
+  CSACDFile(KODI_HANDLE instance, const std::string& version) : CInstanceVFS(instance, version) { }
   void* Open(const VFSURL& url) override;
   ssize_t Read(void* context, void* lpBuf, size_t uiBufSize) override;
   bool Close(void* context) override;
@@ -520,14 +520,14 @@ bool CSACDFile::ContainsFiles(const VFSURL& url, std::vector<kodi::vfs::CDirEntr
 class ATTRIBUTE_HIDDEN CMyAddon : public kodi::addon::CAddonBase
 {
 public:
-  CMyAddon() { }
-  virtual ADDON_STATUS CreateInstance(int instanceType, std::string instanceID, KODI_HANDLE instance, KODI_HANDLE& addonInstance) override
+  CMyAddon() = default;
+  ADDON_STATUS CreateInstance(int instanceType, const std::string& instanceID, KODI_HANDLE instance, const std::string& version, KODI_HANDLE& addonInstance) override
   {
     init_logging();
-    addonInstance = new CSACDFile(instance);
+    addonInstance = new CSACDFile(instance, version);
     return ADDON_STATUS_OK;
   }
-  virtual ~CMyAddon()
+  ~CMyAddon() override
   {
     destroy_logging();
   }
