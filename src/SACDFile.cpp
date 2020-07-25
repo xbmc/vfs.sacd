@@ -236,21 +236,21 @@ static void frame_error_callback(int frame_count, int frame_error_code,
 
 }
 
-class CSACDFile : public kodi::addon::CInstanceVFS
+class ATTRIBUTE_HIDDEN CSACDFile : public kodi::addon::CInstanceVFS
 {
 public:
   CSACDFile(KODI_HANDLE instance, const std::string& version) : CInstanceVFS(instance, version) { }
-  void* Open(const VFSURL& url) override;
-  ssize_t Read(void* context, void* lpBuf, size_t uiBufSize) override;
-  bool Close(void* context) override;
-  int64_t GetLength(void* context) override;
-  int64_t GetPosition(void* context) override;
-  int Stat(const VFSURL& url, struct __stat64* buffer) override;
-  int IoControl(void* context, VFS_IOCTRL request, void* param) override;
-  bool ContainsFiles(const VFSURL& url,
+  kodi::addon::VFSFileHandle Open(const kodi::addon::VFSUrl& url) override;
+  ssize_t Read(kodi::addon::VFSFileHandle context, uint8_t* lpBuf, size_t uiBufSize) override;
+  bool Close(kodi::addon::VFSFileHandle context) override;
+  int64_t GetLength(kodi::addon::VFSFileHandle context) override;
+  int64_t GetPosition(kodi::addon::VFSFileHandle context) override;
+  int Stat(const kodi::addon::VFSUrl& url, kodi::vfs::FileStatus& buffer) override;
+  bool IoControlGetSeekPossible(kodi::addon::VFSFileHandle context) override;
+  bool ContainsFiles(const kodi::addon::VFSUrl& url,
                      std::vector<kodi::vfs::CDirEntry>& items,
                      std::string& rootPath) override;
-  bool GetDirectory(const VFSURL& url,
+  bool GetDirectory(const kodi::addon::VFSUrl& url,
                     std::vector<kodi::vfs::CDirEntry>& items,
                     CVFSCallbacks callbacks) override
   { std::string rpath; return ContainsFiles(url, items, rpath); }
@@ -258,12 +258,12 @@ public:
   std::vector<uint8_t> id3_buffer;
 };
 
-void* CSACDFile::Open(const VFSURL& url)
+kodi::addon::VFSFileHandle CSACDFile::Open(const kodi::addon::VFSUrl& url)
 {
-  std::string file(url.filename);
+  std::string file(url.GetFilename());
   int track = strtol(file.substr(0,file.size()-4).c_str(), 0, 10);
   SACDContext* result = new SACDContext;
-  result->reader = sacd_open(URLDecode(url.hostname).c_str());
+  result->reader = sacd_open(URLDecode(url.GetHostname()).c_str());
   if (!result->reader)
   {
     delete result;
@@ -277,9 +277,10 @@ void* CSACDFile::Open(const VFSURL& url)
     return nullptr;
   }
 
+  std::string url2 = url.GetURL();
   result->output = scarletbook_output_create(result->handle, 0, 0, 0);
   scarletbook_output_enqueue_track(result->output, result->handle->twoch_area_idx,
-                                   track-1, const_cast<char*>(url.url),
+                                   track-1, const_cast<char*>(url2.c_str()),
                                    const_cast<char*>("dsf"), 0);
 
   scarletbook_frame_init(result->handle);
@@ -320,7 +321,7 @@ void* CSACDFile::Open(const VFSURL& url)
   return result;
 }
 
-ssize_t CSACDFile::Read(void* context, void* lpBuf, size_t uiBufSize)
+ssize_t CSACDFile::Read(kodi::addon::VFSFileHandle context, uint8_t* lpBuf, size_t uiBufSize)
 {
   SACDContext* ctx = static_cast<SACDContext*>(context);
 
@@ -427,12 +428,12 @@ ssize_t CSACDFile::Read(void* context, void* lpBuf, size_t uiBufSize)
   }
 
   size_t tocopy = std::min(uiBufSize, (size_t)ctx->decode_buffer.getMaxReadSize());
-  ctx->decode_buffer.ReadData(static_cast<char*>(lpBuf), tocopy);
+  ctx->decode_buffer.ReadData(reinterpret_cast<char*>(lpBuf), tocopy);
   ctx->pos += tocopy;
   return tocopy;
 }
 
-bool CSACDFile::Close(void* context)
+bool CSACDFile::Close(kodi::addon::VFSFileHandle context)
 {
   SACDContext* ctx = static_cast<SACDContext*>(context);
   free(ctx->output->read_buffer);
@@ -443,48 +444,42 @@ bool CSACDFile::Close(void* context)
   return true;
 }
 
-int64_t CSACDFile::GetLength(void* context)
+int64_t CSACDFile::GetLength(kodi::addon::VFSFileHandle context)
 {
   SACDContext* ctx = static_cast<SACDContext*>(context);
   dsf_handle_t* handle = static_cast<dsf_handle_t*>(ctx->ft->priv);
   return (ctx->end_lsn - ctx->ft->start_lsn) * SACD_LSN_SIZE + handle->header_size + id3_buffer.size();
 }
 
-int64_t CSACDFile::GetPosition(void* context)
+int64_t CSACDFile::GetPosition(kodi::addon::VFSFileHandle context)
 {
   SACDContext* ctx = static_cast<SACDContext*>(context);
   return ctx->pos;
 }
 
-int CSACDFile::Stat(const VFSURL& url, struct __stat64* buffer)
+int CSACDFile::Stat(const kodi::addon::VFSUrl& url, kodi::vfs::FileStatus& buffer)
 {
-  memset(buffer, 0, sizeof(struct __stat64));
-
-  errno = ENOENT;
   return -1;
 }
 
-int CSACDFile::IoControl(void* context, VFS_IOCTRL request, void* param)
+bool CSACDFile::IoControlGetSeekPossible(kodi::addon::VFSFileHandle context)
 {
-  if (request == VFS_IOCTRL_SEEK_POSSIBLE)
-    return 0;
-
-  return -1;
+  return false;
 }
 
-bool CSACDFile::ContainsFiles(const VFSURL& url, std::vector<kodi::vfs::CDirEntry>& items, std::string& rootPath)
+bool CSACDFile::ContainsFiles(const kodi::addon::VFSUrl& url, std::vector<kodi::vfs::CDirEntry>& items, std::string& rootPath)
 {
   sacd_reader_t* reader;
   std::string encoded;
-  if (strncmp(url.url, "sacd://",7) == 0 && strlen(url.hostname))
+  if (strncmp(url.GetURL().c_str(), "sacd://" ,7) == 0 && !url.GetHostname().empty())
   {
-    encoded = URLEncode(url.hostname);
-    reader = sacd_open(url.hostname);
+    encoded = URLEncode(url.GetHostname());
+    reader = sacd_open(url.GetHostname().c_str());
   }
   else
   {
-    encoded = URLEncode(url.url);
-    reader = sacd_open(url.url);
+    encoded = URLEncode(url.GetURL());
+    reader = sacd_open(url.GetURL().c_str());
   }
   if (reader)
   {
