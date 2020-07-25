@@ -19,14 +19,14 @@ public:
   bool Create(unsigned int size);
   void Destroy();
   void Clear();
-  bool ReadData(char *buf, unsigned int size);
-  bool ReadData(CRingBuffer &rBuf, unsigned int size);
-  bool WriteData(const char *buf, unsigned int size);
-  bool WriteData(CRingBuffer &rBuf, unsigned int size);
+  bool ReadData(char* buf, unsigned int size);
+  bool ReadData(CRingBuffer& rBuf, unsigned int size);
+  bool WriteData(const char* buf, unsigned int size);
+  bool WriteData(CRingBuffer& rBuf, unsigned int size);
   bool SkipBytes(int skipSize);
-  bool Append(CRingBuffer &rBuf);
-  bool Copy(CRingBuffer &rBuf);
-  char *getBuffer();
+  bool Append(CRingBuffer& rBuf);
+  bool Copy(CRingBuffer& rBuf);
+  char* getBuffer();
   unsigned int getSize();
   unsigned int getReadPtr() const;
   unsigned int getWritePtr();
@@ -36,7 +36,7 @@ public:
 private:
   ThreadHelpers::CMutex m_critSection;
 
-  char *m_buffer = nullptr;
+  char* m_buffer = nullptr;
   unsigned int m_size = 0;
   unsigned int m_readPtr = 0;
   unsigned int m_writePtr = 0;
