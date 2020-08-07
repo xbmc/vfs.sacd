@@ -5,7 +5,7 @@
   name="SACD ISO support"
   provider-name="spiff">
   <requires>@ADDON_DEPENDS@</requires>
-  <extension
+<!--  <extension
     point="kodi.vfs"
     protocols="sacd"
     extensions=".iso"
@@ -13,7 +13,14 @@
     directories="true"
     filedirectories="true"
     encodedhostname="true"
-    library_@PLATFORM@="@LIBRARY_FILENAME@" />
+    library_@PLATFORM@="@LIBRARY_FILENAME@" />-->
+  <extension
+    point="kodi.audiodecoder"
+    name="sacd"
+    extension=".dsf|.dff|.iso|.sacdstream"
+    tracks="true"
+    tags="true"
+    library_@PLATFORM@="@LIBRARY_FILENAME@"/>
   <extension point="xbmc.addon.metadata">
     <summary lang="de_DE">Super Audio CD ISO-Image</summary>
     <summary lang="en_GB">Super Audio CD ISO image</summary>

@@ -1,3 +1,0 @@
-Source from https://github.com/sacd-ripper/sacd-ripper (26 Feb 2016)
-
-Contains few Kodi related changes!
