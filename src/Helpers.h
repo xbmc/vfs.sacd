@@ -64,21 +64,20 @@ public:
   inline ~PreventCopy(void) = default;
 
 private:
-  inline PreventCopy(const PreventCopy &c) { *this = c; }
-  inline PreventCopy &operator=(const PreventCopy &c){ (void)c; return *this; }
+  inline PreventCopy(const PreventCopy& c) { *this = c; }
+  inline PreventCopy& operator=(const PreventCopy& c)
+  {
+    (void)c;
+    return *this;
+  }
 };
 
 class CMutex : public PreventCopy
 {
 public:
-  inline CMutex(void) : m_iLockCount(0)
-  {
-  }
+  inline CMutex(void) : m_iLockCount(0) {}
 
-  inline ~CMutex(void)
-  {
-    Clear();
-  }
+  inline ~CMutex(void) { Clear(); }
 
   inline bool TryLock(void)
   {
@@ -133,9 +132,8 @@ private:
 class CLockObject : public PreventCopy
 {
 public:
-  inline CLockObject(CMutex &mutex, bool bClearOnExit = false) :
-    m_mutex(mutex),
-    m_bClearOnExit(bClearOnExit)
+  inline CLockObject(CMutex& mutex, bool bClearOnExit = false)
+    : m_mutex(mutex), m_bClearOnExit(bClearOnExit)
   {
     m_mutex.Lock();
   }
@@ -148,28 +146,16 @@ public:
       Unlock();
   }
 
-  inline bool TryLock(void)
-  {
-    return m_mutex.TryLock();
-  }
+  inline bool TryLock(void) { return m_mutex.TryLock(); }
 
-  inline void Unlock(void)
-  {
-    m_mutex.Unlock();
-  }
+  inline void Unlock(void) { m_mutex.Unlock(); }
 
-  inline bool Clear(void)
-  {
-    return m_mutex.Clear();
-  }
+  inline bool Clear(void) { return m_mutex.Clear(); }
 
-  inline bool Lock(void)
-  {
-    return m_mutex.Lock();
-  }
+  inline bool Lock(void) { return m_mutex.Lock(); }
 
 private:
-  CMutex &m_mutex;
+  CMutex& m_mutex;
   bool m_bClearOnExit;
 };
 

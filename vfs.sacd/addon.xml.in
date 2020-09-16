@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <addon
   id="vfs.sacd"
-  version="1.3.0"
+  version="2.0.0"
   name="SACD ISO support"
   provider-name="spiff">
   <requires>@ADDON_DEPENDS@</requires>
@@ -15,16 +15,25 @@
     encodedhostname="true"
     library_@PLATFORM@="@LIBRARY_FILENAME@" />
   <extension point="xbmc.addon.metadata">
+    <summary lang="de_DE">Super Audio CD ISO-Image</summary>
     <summary lang="en_GB">Super Audio CD ISO image</summary>
-<description lang="en_GB">This addon allows Kodi to read content from a Super Audio CD ISO image.
+    <description lang="de_DE">Mit diesem Addon kann Kodi Inhalte von einem Super Audio CD ISO-Image lesen.
+
+Super Audio CD (SACD) ist ein schreibgeschütztes optisches Disc-Format für die Audiospeicherung, das 1999 eingeführt wurde und von Sony und Philips Electronics gemeinsam als Nachfolger der Compact Disc entwickelt wurde.
+
+Das SACD-Format bietet mehr Audiokanäle (z. B. Surround-Sound), eine höhere Bitrate und eine längere Wiedergabezeit als eine herkömmliche CD.</description>
+    <description lang="en_GB">This addon allows Kodi to read content from a Super Audio CD ISO image.
 
 Super Audio CD (SACD) is a read-only optical disc format for audio storage, introduced in 1999, developed jointly by Sony and Philips Electronics to be the successor to the Compact Disc.
 
 The SACD format offers more audio channels (e.g. surround sound), a higher bit rate, and longer playing time than a conventional CD.</description>
+    <disclaimer lang="de_DE">Die Wiedergabesuche ist derzeit nicht möglich.</disclaimer>
     <disclaimer lang="en_GB">Playback seek is currently not possible.</disclaimer>
     <platform>@PLATFORM@</platform>
     <license>GPL-2.0-or-later</license>
     <source>https://github.com/xbmc/vfs.sacd</source>
+    <lifecyclestate type="deprecated" lang="en_GB">Replaced by audiodecoder.sacd addon!</lifecyclestate>
+    <lifecyclestate type="deprecated" lang="de_DE">Ersetzt durch das Addon audiodecoder.sacd!</lifecyclestate>
     <assets>
       <icon>icon.png</icon>
     </assets>
