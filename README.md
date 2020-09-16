@@ -2,6 +2,8 @@
 
 This is a [Kodi](https://kodi.tv) VFS addon for SACD isos.
 
+> **NOTE:** Addon deprecated, use [audiodecoder.sacd](https://github.com/xbmc/audiodecoder.sacd), as this does not have full SACD support.
+
 [![License: GPL-2.0-or-later](https://img.shields.io/badge/License-GPL%20v2+-blue.svg)](LICENSE.md)
 [![Build Status](https://travis-ci.org/xbmc/vfs.sacd.svg?branch=Matrix)](https://travis-ci.org/xbmc/vfs.sacd/branches)
 [![Build Status](https://dev.azure.com/teamkodi/binary-addons/_apis/build/status/xbmc.vfs.sacd?branchName=Matrix)](https://dev.azure.com/teamkodi/binary-addons/_build/latest?definitionId=53&branchName=Matrix)
