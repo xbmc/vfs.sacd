@@ -3,7 +3,7 @@ Upstream-Name: vfs.sacd
 Source: https://github.com/xbmc/vfs.sacd
 
 Files: *
-Copyright: 2017-2020 Team XBMC
+Copyright: 2017-2021 Team Kodi
            2017 Arne Morten Kvarving <spiff@kodi.tv>
 License: GPL-2+
  This package is free software; you can redistribute it and/or modify
