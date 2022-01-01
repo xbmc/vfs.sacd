@@ -233,10 +233,10 @@ extern "C"
   }
 }
 
-class ATTRIBUTE_HIDDEN CSACDFile : public kodi::addon::CInstanceVFS
+class ATTR_DLL_LOCAL CSACDFile : public kodi::addon::CInstanceVFS
 {
 public:
-  CSACDFile(KODI_HANDLE instance, const std::string& version) : CInstanceVFS(instance, version) {}
+  CSACDFile(const kodi::addon::IInstanceInfo& instance) : CInstanceVFS(instance) {}
   kodi::addon::VFSFileHandle Open(const kodi::addon::VFSUrl& url) override;
   ssize_t Read(kodi::addon::VFSFileHandle context, uint8_t* lpBuf, size_t uiBufSize) override;
   bool Close(kodi::addon::VFSFileHandle context) override;
@@ -512,18 +512,15 @@ bool CSACDFile::ContainsFiles(const kodi::addon::VFSUrl& url,
 }
 
 
-class ATTRIBUTE_HIDDEN CMyAddon : public kodi::addon::CAddonBase
+class ATTR_DLL_LOCAL CMyAddon : public kodi::addon::CAddonBase
 {
 public:
   CMyAddon() = default;
-  ADDON_STATUS CreateInstance(int instanceType,
-                              const std::string& instanceID,
-                              KODI_HANDLE instance,
-                              const std::string& version,
-                              KODI_HANDLE& addonInstance) override
+  ADDON_STATUS CreateInstance(const kodi::addon::IInstanceInfo& instance,
+                              KODI_ADDON_INSTANCE_HDL& hdl) override
   {
     init_logging();
-    addonInstance = new CSACDFile(instance, version);
+    hdl = new CSACDFile(instance);
     return ADDON_STATUS_OK;
   }
   ~CMyAddon() override { destroy_logging(); }
